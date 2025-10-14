@@ -1,2 +1,1 @@
-# Tantalizing-Teachers
-Tantalizing Teachers is a global teaching platform, community, and YouTube channel that inspires educators and learners. Focused on English and Math for pre-primary to secondary levels, we empower teachers to make learning engaging, creative, and truly exciting.
+EduQuest Academy is a global teaching platform, educator community, and YouTube channel dedicated to inspiring both teachers and learners. Focused initially on English and Math for pre-primary, primary, and secondary students, we provide creative lessons, interactive resources, and practical tools to make learning engaging, fun, and effective. Our mission is to empower teachers, spark curiosity, and turn every classroom into a place where students thrive and teachers excel.

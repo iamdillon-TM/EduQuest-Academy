@@ -21,8 +21,8 @@ logger = logging.getLogger("eduquest")
 # ---------------------------
 # Flask app + config
 # ---------------------------
-# <<< CRITICAL FIX: Set both folders to the root directory (.)
-app = Flask(__name__, static_folder=".", template_folder=".")
+# CRITICAL FIX: Tell Flask to look in the root directory (.) for both templates and static files.
+app = Flask(__name__, static_folder=".", template_folder=".") # <--- THIS LINE IS THE FIX
 
 # Secret key from environment
 app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
@@ -42,7 +42,7 @@ SENDER_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 RECIPIENT_EMAIL = os.environ.get("RECIPIENT_EMAIL", SENDER_EMAIL)  # fallback
 
 # ---------------------------
-# Simulated data stores (replace with DB in production)
+# Simulated data stores
 # ---------------------------
 SAMPLE_PASSWORDS = {
     "admin_pw": generate_password_hash("8803"),
@@ -70,7 +70,6 @@ TEACHERS = {
     }
 }
 
-# --- STUDENTS DATA with invoices for new routes ---
 STUDENTS = {
     "S101": {
         "id": "S101",
@@ -101,7 +100,6 @@ STUDENTS = {
         ]
     }
 }
-# ---------------------------------------------------------
 
 COURSE_DETAILS = {
     "Let's Begin (Foundation Phase)": {
@@ -114,11 +112,10 @@ COURSE_DETAILS = {
     }
 }
 
-# Mock progress data used for student-facing pages
 STUDENT_MOCK_PROGRESS = {"total_lessons": 20, "lessons_completed": 8, "lessons_remaining": 12, "next_topic": "Unit 10: Presenting Your Ideas"}
 
 # ---------------------------
-# Helper utilities (Omitted for brevity, but included in the final file)
+# Helper utilities
 # ---------------------------
 def get_student_by_username(username):
     for s in STUDENTS.values():
@@ -127,7 +124,6 @@ def get_student_by_username(username):
     return None
 
 def get_full_course_key(short_name):
-    # Attempts to find the full key in COURSE_DETAILS based on the short name stored in student data
     for key in COURSE_DETAILS:
         if short_name in key:
             return key
@@ -146,7 +142,6 @@ def send_registration_email(form_data: dict) -> bool:
         return True
 
     try:
-        # Note: Gmail SMTP may require 'Less secure app access' or an App Password
         msg = MIMEMultipart()
         msg['From'] = SENDER_EMAIL
         msg['To'] = RECIPIENT_EMAIL
@@ -200,12 +195,10 @@ def registration_success():
 
 @app.route("/about")
 def about():
-    # Placeholder: Assuming 'about.html' is in the root
     return render_template("about.html")
 
 @app.route("/contact")
 def contact():
-    # Placeholder: Assuming 'contact.html' is in the root
     return render_template("contact.html")
 
 @app.route("/courses")
@@ -226,7 +219,6 @@ def advance_phase():
 
 @app.route("/terms_and_conditions")
 def terms_and_conditions():
-    # Placeholder: Assuming 'terms_and_conditions.html' is in the root
     return render_template("terms_and_conditions.html")
 
 # ---------------------------
@@ -248,7 +240,6 @@ def teacher_login():
             return redirect(url_for("unified_teacher_dashboard"))
         else:
             return render_template("teacher_login.html", error="Invalid username or password.")
-    # Placeholder: Assuming 'teacher_login.html' is in the root
     return render_template("teacher_login.html")
 
 @app.route("/student_login", methods=["GET", "POST"])
@@ -267,7 +258,6 @@ def student_login():
             return redirect(url_for("student_dashboard"))
         else:
             return render_template("student_login.html", error="Invalid student username or password.")
-    # Placeholder: Assuming 'student_login.html' is in the root
     return render_template("student_login.html")
 
 # ---------------------------
@@ -296,7 +286,6 @@ def unified_teacher_dashboard():
         "all_students": list(STUDENTS.values()) if is_admin else None,
         "all_teachers": list(TEACHERS.keys()) if is_admin else None
     }
-    # Placeholder: Assuming 'teacher_dashboard.html' is in the root
     return render_template("teacher_dashboard.html", teacher=context)
 
 @app.route("/student_dashboard")
@@ -309,23 +298,21 @@ def student_dashboard():
         session.clear()
         return redirect(url_for("student_login"))
 
-    # Use the mock progress data for consistency across student pages
     student_view = {
         "username": student["username"],
         "full_name": student["name"],
         "email": f"{student['username'].lower()}@eduquest.com",
         "current_package": student["course"],
         "teacher": student["assigned_teacher"],
-        "course_progress": STUDENT_MOCK_PROGRESS, # Use the shared mock data
+        "course_progress": STUDENT_MOCK_PROGRESS,
         "upcoming_classes": [
             {"date": student["next_class"].split(" ")[0], "time": "19:00 - 20:00", "topic": "Unit 9", "teacher": student["assigned_teacher"]}
         ]
     }
-    # Placeholder: Assuming 'student_dashboard.html' is in the root
     return render_template("student_dashboard.html", student=student_view)
 
 # ---------------------------
-# Student Portal Routes (New)
+# Student Portal Routes
 # ---------------------------
 
 @app.route("/my_course")
@@ -346,7 +333,6 @@ def my_course():
         "modules": ["N/A"]
     })
     
-    # Pass student with course progress data for the template
     student_for_template = {
         "course_progress": STUDENT_MOCK_PROGRESS,
     }
@@ -387,12 +373,11 @@ def payment_options(invoice_id):
         
     invoice = get_invoice_by_id(student["id"], invoice_id)
     if not invoice:
-        # Better to return a rendered error template in a real app
         return f"Invoice {invoice_id} not found.", 404
     
     return render_template(
         "payments.html", 
-        invoice=invoice # Passed to allow the template to build the international_details link
+        invoice=invoice 
     )
 
 @app.route("/international_details/<invoice_id>")
@@ -409,7 +394,6 @@ def international_details(invoice_id):
     if not invoice:
         return f"Invoice {invoice_id} not found.", 404
 
-    # Pass the student's username for the required reference in the template
     student_view = {"username": student["username"]} 
     
     return render_template(
@@ -443,7 +427,6 @@ def chatbot_api():
     message = data.get("message", "").lower()
     logger.info("Chatbot received: %s", message)
 
-    # Example: simple keyword responses
     if "schedule" in message:
         response = "Your next class is on Friday at 19:00."
     elif "payment" in message:

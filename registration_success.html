@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Success - EduQuest Academy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #e6e9f2, #f4f7f9);
+            color: #4a4a4a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .success-box {
+            background: #ffffff;
+            border-radius: 15px;
+            max-width: 500px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-top: 5px solid #00e676; /* Green success indicator */
+        }
+        h1 {
+            color: #00e676;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .email-info {
+            background-color: #f0fff0;
+            border: 1px dashed #00e676;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .cta-button {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: #6c63ff;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            transition: background-color 0.3s;
+        }
+        .cta-button:hover {
+            background-color: #5247c7;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-box">
+        <h1>✅ Thank You!</h1>
+        <h2>Registration Submitted!</h2>
+        <p>Dear **{{ name }}**, your course inquiry has been successfully received.</p>
+        
+        <div class="email-info">
+            <p>We have received your details and an email has been sent to our enrollment team (**{{ RECIPIENT_EMAIL }}**).</p>
+            <p>A coordinator will contact you shortly (within 24 hours) via email or phone to confirm the details and schedule an assessment.</p>
+        </div>
+
+        <a href="{{ url_for('home') }}" class="cta-button">Return to Home Page</a>
+    </div>
+</body>
+</html>

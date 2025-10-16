@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EduQuest Academy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* --- HARMONIZED COLOR PALETTE --- */
+        :root {
+            --color-primary: #34495e; /* Darker Blue-Gray */
+            --color-secondary: #2ecc71; /* Fresh Green (Kept for send button) */
+            --color-accent: #3498db; /* Clear Blue (Modern, engaging) */
+            --color-dark: #2c3e50;
+            --color-light: #ecf0f1;
+        }
+
+        /* === GENERAL STYLES === */
+        body {
+            margin: 0;
+            font-family: "Poppins", sans-serif;
+            /* LOADING HOMEPAGE.PNG FROM STATIC FOLDER */
+            background: url("{{ url_for('static', filename='homepage.png') }}") no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            text-align: center;
+            overflow-x: hidden;
+        }
+
+        /* === OVERLAY FOR READABILITY === */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            /* Softened overlay color to keep the image warmth */
+            background: rgba(0, 0, 0, 0.55);
+            z-index: -1;
+        }
+
+        /* === HEADER BUTTONS (TOP LEFT & RIGHT) === */
+        .top-left-buttons {
+            position: absolute;
+            top: 20px;
+            left: 30px; /* MOVED TO LEFT */
+            display: flex;
+            gap: 15px;
+        }
+        
+        .top-right-buttons {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+
+        .login-btn {
+            background-color: var(--color-accent); /* Clear Blue */
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none; 
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        .login-btn.contact-btn {
+            background-color: transparent; /* Transparent for less distraction */
+            border: 1px solid var(--color-accent);
+            box-shadow: none;
+        }
+
+        .login-btn.contact-btn:hover {
+            background-color: rgba(52, 152, 219, 0.2);
+            transform: none;
+        }
+
+        .login-btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -75%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: all 0.5s;
+        }
+
+        .login-btn:hover::before {
+            left: 125%;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.6);
+            background-color: #2980b9; 
+        }
+
+        /* === HERO SECTION === */
+        .hero {
+            margin-top: 120px;
+        }
+
+        h1 {
+            font-size: 64px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(52, 152, 219, 0.8);
+        }
+
+        #quote {
+            font-size: 24px;
+            font-style: italic;
+            color: var(--color-light);
+            height: 60px;
+            margin-bottom: 60px;
+            white-space: nowrap;
+            overflow: hidden;
+            border-right: 3px solid var(--color-light);
+        }
+
+        /* === NAVIGATION BUTTONS (BIG BLUE) === */
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            /* CHANGED TO BLUE */
+            background-color: var(--color-accent); 
+            color: white;
+            border: none;
+            /* MADE MUCH BIGGER */
+            padding: 25px 60px;
+            border-radius: 50px;
+            /* INCREASED FONT SIZE */
+            font-size: 24px; 
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease-in-out;
+            /* CHANGED SHADOW TO BLUE */
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.5); 
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        .nav-btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -75%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: all 0.5s;
+        }
+
+        .nav-btn:hover::before {
+            left: 125%;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-4px);
+            /* CHANGED SHADOW TO STRONGER BLUE */
+            box-shadow: 0 0 25px rgba(52, 152, 219, 0.9);
+            background-color: #2980b9; /* Slightly darker blue on hover */
+        }
+
+        /* === CHATBOT === */
+        .chatbot {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--color-accent); /* Clear Blue */
+            border-radius: 50%;
+            width: 65px;
+            height: 65px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.6);
+            transition: all 0.3s ease;
+            z-index: 1001; /* Ensure it's above everything */
+        }
+
+        .chatbot:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 25px rgba(52, 152, 219, 0.9);
+        }
+
+        .chat-window {
+            display: none;
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 320px;
+            height: 420px;
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--color-dark);
+            border-radius: 15px;
+            box-shadow: 0 0 25px rgba(52, 152, 219, 0.5);
+            overflow: hidden;
+            flex-direction: column;
+            text-align: left;
+            z-index: 1000;
+        }
+
+        .chat-header {
+            background: var(--color-primary); /* Dark Blue-Gray */
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .quick-queries {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 10px 15px 5px 15px;
+            gap: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .quick-query-btn {
+            background: var(--color-light);
+            color: var(--color-primary);
+            border: 1px solid var(--color-accent);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quick-query-btn:hover {
+            background: var(--color-accent);
+            color: white;
+        }
+
+        .chat-body {
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+
+        .chat-body p {
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+        
+        .chat-input {
+            display: flex;
+            border-top: 1px solid #ccc;
+        }
+
+        .chat-input input {
+            flex: 1;
+            border: none;
+            padding: 10px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .chat-input button {
+            background: var(--color-secondary); /* Fresh Green (Kept for send button) */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .chat-input button:hover {
+            background-color: var(--color-primary);
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="top-left-buttons">
+        <a href="mailto:support@eduquestacademy.com" class="login-btn contact-btn">Contact</a>
+        <a href="{{ url_for('payments') }}" class="login-btn">Payments</a>
+    </div>
+
+    <div class="top-right-buttons">
+        <a href="{{ url_for('teacher_login') }}" class="login-btn">Teacher Login</a>
+        <a href="{{ url_for('student_login') }}" class="login-btn">Student Login</a>
+    </div>
+
+    <div class="hero">
+        <h1>EduQuest Academy</h1>
+        <div id="quote"></div>
+
+        <div class="nav-buttons">
+            <a href="{{ url_for('courses') }}" class="nav-btn">Courses</a>
+            <a href="{{ url_for('register') }}" class="nav-btn">Register Now</a>
+            <a href="{{ url_for('terms_and_conditions') }}" class="nav-btn">Terms & Conditions</a>
+        </div>
+    </div>
+
+    <div class="chatbot" onclick="toggleChat()">
+        💬
+    </div>
+
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">EduBot 🤖</div>
+
+        <div class="quick-queries">
+            <span class="quick-query-btn" onclick="sendQuickQuery('What is my schedule?')">My Schedule</span>
+            <span class="quick-query-btn" onclick="sendQuickQuery('Recommend a course level.')">Recommend a Level</span>
+            <span class="quick-query-btn" onclick="sendQuickQuery('Payments options.')">Payments Options</span>
+            <span class="quick-query-btn" onclick="sendQuickQuery('What is Let\'s Go?')">What is Let's Go?</span>
+        </div>
+
+        <div class="chat-body" id="chatBody">
+            <p><strong>EduBot:</strong> Hello! I am EduQuest Academy's AI Assistant. How can I guide your educational journey today? Click a button above or type your question!</p>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Ask me anything..." />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // === TYPEWRITER QUOTES ===
+        const quotes = [
+            "Education is the most powerful weapon which you can use to change the world. — Nelson Mandela",
+            "The function of education is to teach one to think intensively and to think critically. — Martin Luther King Jr.",
+            "It always seems impossible until it’s done. — Nelson Mandela",
+            "Tell me and I forget. Teach me and I remember. Involve me and I learn. — Benjamin Franklin",
+            "The beautiful thing about learning is that no one can take it away from you. — B.B. King",
+            "Education is not preparation for life; education is life itself. — John Dewey",
+            "The mind is not a vessel to be filled but a fire to be kindled. — Plutarch",
+            "Teachers open the door, but you must enter by yourself. — Chinese Proverb",
+            "Learning never exhausts the mind. — Leonardo da Vinci",
+            "The best teachers are those who show you where to look, but don’t tell you what to see. — Alexandra K. Trenfor"
+        ];
+
+        let quoteIndex = 0;
+        let charIndex = 0;
+        const quoteElement = document.getElementById("quote");
+
+        function typeQuote() {
+            if (quoteIndex >= quotes.length) {
+                // Loop back to the first quote
+                quoteIndex = 0; 
+                setTimeout(typeQuote, 100); 
+                return;
+            }
+            if (charIndex < quotes[quoteIndex].length) {
+                quoteElement.textContent += quotes[quoteIndex].charAt(charIndex);
+                charIndex++;
+                setTimeout(typeQuote, 60);
+            } else {
+                setTimeout(() => {
+                    quoteElement.textContent = "";
+                    charIndex = 0;
+                    quoteIndex++;
+                    typeQuote();
+                }, 6000);
+            }
+        }
+        typeQuote();
+
+        // === CHATBOT LOGIC ===
+        const chatWindow = document.getElementById("chatWindow");
+        const chatBody = document.getElementById("chatBody");
+        const userInput = document.getElementById("userInput");
+
+        function toggleChat() {
+            chatWindow.style.display = chatWindow.style.display === "flex" ? "none" : "flex";
+        }
+        
+        function sendQuickQuery(query) {
+            userInput.value = query;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // 1. Display User Message
+            chatBody.innerHTML += `<p style="text-align: right;"><strong>You:</strong> ${message}</p>`;
+            userInput.value = "";
+            chatBody.scrollTop = chatBody.scrollHeight;
+            
+            // 2. Display 'Typing' Indicator
+            const typingIndicator = document.createElement('p');
+            typingIndicator.innerHTML = '<strong>EduBot:</strong> *Typing...*';
+            typingIndicator.id = 'typing-indicator';
+            chatBody.appendChild(typingIndicator);
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            try {
+                // 3. Send to Flask API
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (!response.ok) throw new Error('Network response was not ok');
+
+                const data = await response.json();
+                
+                // 4. Format and Display Bot Response
+                // Simple logic for bolding keywords (like in app.py's responses)
+                let reply = data.response.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                
+                // Remove typing indicator and add final response
+                typingIndicator.remove();
+                chatBody.innerHTML += `<p><strong>EduBot:</strong> ${reply}</p>`;
+                
+            } catch (error) {
+                // Remove typing indicator if error occurs
+                typingIndicator.remove();
+                chatBody.innerHTML += `<p style="color: red;"><strong>EduBot:</strong> Sorry, there was an error connecting to the server's brain. Please try again. (${error.message})</p>`;
+                console.error('Chatbot error:', error);
+            }
+
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        // Send message on Enter key press
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

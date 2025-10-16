@@ -1,6 +1,7 @@
 """
 EduQuest Academy - Flask application (single-file)
-Render deployment ready using: gunicorn app:app
+Ready for Render deployment using: gunicorn app:app
+Compatible with Python 3.13 and Flask 3.0.3
 """
 
 import os
@@ -13,27 +14,27 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 # ---------------------------
-# Logging setup
+# Basic logging
 # ---------------------------
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("eduquest")
 
 # ---------------------------
-# Flask app setup
+# Flask app + config
 # ---------------------------
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.secret_key = os.environ.get("EDUQUEST_SECRET_KEY") or os.urandom(24)
 app.config['DEBUG'] = bool(int(os.environ.get("FLASK_DEBUG", "0")))
 
 # ---------------------------
-# Email configuration
+# Email configuration (ENV)
 # ---------------------------
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "")
 SENDER_PASSWORD = os.environ.get("SENDER_PASSWORD", "")
 RECIPIENT_EMAIL = os.environ.get("RECIPIENT_EMAIL", "")
 
 # ---------------------------
-# Sample in-memory data
+# Simulated data stores
 # ---------------------------
 SAMPLE_PASSWORDS = {
     "admin_pw": generate_password_hash("8803"),
@@ -67,7 +68,7 @@ STUDENTS = {
         "username": "Bob",
         "password": SAMPLE_PASSWORDS["bob_pw"],
         "name": "Bob Nguyễn",
-        "course": "Let's Begin (Foundation Phase)",
+        "course": "Let's Begin",
         "progress": "40%",
         "next_class": "2025-10-18 19:00",
         "assigned_teacher": "Dillon"
@@ -77,7 +78,7 @@ STUDENTS = {
         "username": "Alice",
         "password": SAMPLE_PASSWORDS["alice_pw"],
         "name": "Alice Tran",
-        "course": "Intermediate Phase (B1)",
+        "course": "Intermediate Phase",
         "progress": "75%",
         "next_class": "2025-10-20 17:00",
         "assigned_teacher": "Sarah"
@@ -90,17 +91,13 @@ COURSE_DETAILS = {
         "modules": ["Module 1", "Module 2", "Module 3"]
     },
     "Intermediate Phase (B1)": {
-        "description": "Intermediate course to build confidence and fluency.",
+        "description": "Intermediate course",
         "modules": ["Module 6", "Module 7", "Module 8"]
-    },
-    "Advanced Phase (B2-C1)": {
-        "description": "Advanced English development course.",
-        "modules": ["Module 9", "Module 10", "Module 11"]
     }
 }
 
 # ---------------------------
-# Helper functions
+# Helper utilities
 # ---------------------------
 def get_student_by_username(username):
     for s in STUDENTS.values():
@@ -145,7 +142,7 @@ def send_registration_email(form_data: dict) -> bool:
         return False
 
 # ---------------------------
-# Public routes
+# Routes
 # ---------------------------
 @app.route("/")
 def home():
@@ -186,9 +183,9 @@ def foundation_phase():
 def intermediate_phase():
     return render_template("intermediate_phase.html")
 
-@app.route("/advanced_phase")
-def advanced_phase():
-    return render_template("advanced_phase.html")
+@app.route("/advance_phase")
+def advance_phase():
+    return render_template("advance_phase.html")
 
 @app.route("/terms_and_conditions")
 def terms_and_conditions():
@@ -205,14 +202,11 @@ def teacher_login():
         teacher = TEACHERS.get(username)
         if teacher and check_password_hash(teacher["password"], password):
             session.clear()
-            session.update({
-                "logged_in": True,
-                "user_type": "teacher",
-                "username": username,
-                "role": teacher.get("role", "teacher")
-            })
-            logger.info("Teacher logged in: %s", username)
-            return redirect(url_for("teacher_dashboard"))
+            session["logged_in"] = True
+            session["user_type"] = "teacher"
+            session["username"] = username
+            session["role"] = teacher.get("role", "teacher")
+            return redirect(url_for("unified_teacher_dashboard"))
         return render_template("teacher_login.html", error="Invalid username or password.")
     return render_template("teacher_login.html")
 
@@ -224,39 +218,33 @@ def student_login():
         student = get_student_by_username(username)
         if student and check_password_hash(student["password"], password):
             session.clear()
-            session.update({
-                "logged_in": True,
-                "user_type": "student",
-                "username": student["username"],
-                "student_id": student["id"]
-            })
-            logger.info("Student logged in: %s", student["username"])
+            session["logged_in"] = True
+            session["user_type"] = "student"
+            session["username"] = student["username"]
+            session["student_id"] = student["id"]
             return redirect(url_for("student_dashboard"))
-        return render_template("student_login.html", error="Invalid username or password.")
+        return render_template("student_login.html", error="Invalid student username or password.")
     return render_template("student_login.html")
 
 # ---------------------------
 # Dashboards
 # ---------------------------
 @app.route("/teacher_dashboard")
-def teacher_dashboard():
+def unified_teacher_dashboard():
     if session.get("user_type") != "teacher":
         return redirect(url_for("teacher_login"))
-
     username = session.get("username")
     teacher = TEACHERS.get(username)
     if not teacher:
         session.clear()
         return redirect(url_for("teacher_login"))
-
     is_admin = teacher.get("role") == "admin"
-    assigned_students = [s for s in STUDENTS.values() if s.get("assigned_teacher") == username]
-
+    assigned = [s for s in STUDENTS.values() if s.get("assigned_teacher") == username]
     context = {
         "name": teacher.get("full_name"),
         "email": teacher.get("email"),
         "status": teacher.get("status"),
-        "assigned_students": assigned_students,
+        "assigned_students": assigned,
         "is_admin": is_admin,
         "all_students": list(STUDENTS.values()) if is_admin else None,
         "all_teachers": list(TEACHERS.keys()) if is_admin else None
@@ -267,122 +255,22 @@ def teacher_dashboard():
 def student_dashboard():
     if session.get("user_type") != "student":
         return redirect(url_for("student_login"))
-
     student = get_student_by_username(session.get("username"))
     if not student:
         session.clear()
         return redirect(url_for("student_login"))
-
     student_view = {
         "username": student["username"],
         "full_name": student["name"],
         "email": f"{student['username'].lower()}@eduquest.com",
         "current_package": student["course"],
         "teacher": student["assigned_teacher"],
-        "course_progress": {"total_lessons": 20, "lessons_completed": 8, "lessons_remaining": 12},
+        "course_progress": {"total_lessons": 20, "lessons_completed": 8, "lessons_remaining": 12, "next_topic": "Unit 10: ..."},
         "upcoming_classes": [
             {"date": "2025-10-18", "time": "19:00 - 20:00", "topic": "Unit 9", "teacher": student["assigned_teacher"]}
         ]
     }
     return render_template("student_dashboard.html", student=student_view)
-
-# ---------------------------
-# Student course/profile
-# ---------------------------
-@app.route("/my_course")
-def my_course():
-    if session.get("user_type") != "student":
-        return redirect(url_for("student_login"))
-    student = get_student_by_username(session.get("username"))
-    course_info = COURSE_DETAILS.get(student["course"], {"description": "No info", "modules": []})
-    return render_template("my_course.html", student=student, course_info=course_info)
-
-@app.route("/student_profile")
-def student_profile():
-    if session.get("user_type") != "student":
-        return redirect(url_for("student_login"))
-    student = get_student_by_username(session.get("username"))
-    return render_template("student_profile.html", student=student)
-
-@app.route("/submit_profile", methods=["POST"])
-def submit_profile():
-    if session.get("user_type") != "student":
-        return redirect(url_for("student_login"))
-    full_name = request.form.get("full_name")
-    learning_goals = request.form.get("learning_goals")
-    experience_level = request.form.get("experience_level")
-    logger.info("Profile submitted: %s | %s | %s", full_name, learning_goals, experience_level)
-    return render_template("profile_confirmation.html", name=full_name, goals=learning_goals, experience=experience_level)
-
-# ---------------------------
-# Payments
-# ---------------------------
-def get_invoice(student_username, invoice_id):
-    student = get_student_by_username(student_username)
-    if not student:
-        return None, None
-    invoices = [
-        {"id": "INV-9021", "date": "2025-09-01", "amount": 2500000, "status": "Paid"},
-        {"id": "INV-9022", "date": "2025-10-15", "amount": 3200000, "status": "Unpaid"}
-    ]
-    inv = next((i for i in invoices if i["id"] == invoice_id), None)
-    return student, inv
-
-@app.route("/payments")
-def payments():
-    if session.get("user_type") != "student":
-        return redirect(url_for("student_login"))
-    student = get_student_by_username(session.get("username"))
-    invoices = [
-        {"id": "INV-9021", "date": "2025-09-01", "amount": 2500000, "status": "Paid"},
-        {"id": "INV-9022", "date": "2025-10-15", "amount": 3200000, "status": "Unpaid"}
-    ]
-    return render_template("invoices.html", student=student, invoices=invoices)
-
-@app.route("/vietqr_details/<invoice_id>")
-def vietqr_details(invoice_id):
-    if session.get("user_type") != "student":
-        return redirect(url_for("student_login"))
-    student, inv = get_invoice(session.get("username"), invoice_id)
-    if not inv:
-        return redirect(url_for("payments"))
-    return render_template("vietqr_details.html", student=student, invoice=inv)
-
-@app.route("/international_details/<invoice_id>")
-def international_details(invoice_id):
-    if session.get("user_type") != "student":
-        return redirect(url_for("student_login"))
-    student, inv = get_invoice(session.get("username"), invoice_id)
-    if not inv:
-        return redirect(url_for("payments"))
-    return render_template("international_details.html", student=student, invoice=inv)
-
-# ---------------------------
-# Chatbot API
-# ---------------------------
-@app.route("/api/chat", methods=["POST"])
-def api_chat():
-    data = request.get_json() or {}
-    message = (data.get("message") or "").lower()
-
-    if "course" in message or "level" in message:
-        reply = "We offer Let's Phonics, Let's Begin, Let's Go, and Side by Side. Tell me the learner's age and level and I'll recommend one."
-    elif "register" in message or "sign up" in message:
-        reply = "You can register on the Register page. Which course are you interested in?"
-    elif "price" in message or "cost" in message:
-        reply = "Pricing depends on the package — visit the Payments section for more details."
-    elif "schedule" in message or "class" in message:
-        if session.get("user_type") == "student":
-            student = get_student_by_username(session.get("username"))
-            reply = f"Next class: {student.get('next_class')} with {student.get('assigned_teacher')}."
-        else:
-            reply = "Log in as a student to view your class schedule."
-    elif "hello" in message or "hi" in message:
-        reply = "Hello! I'm EduBot. I can help with courses, registration, or payments."
-    else:
-        reply = "Sorry, I'm still learning. Try asking about courses, registration, or your schedule."
-
-    return jsonify({"response": reply})
 
 # ---------------------------
 # Logout
@@ -393,16 +281,16 @@ def logout():
     return redirect(url_for("home"))
 
 # ---------------------------
-# Health check
+# Health / debug endpoint
 # ---------------------------
 @app.route("/_status")
 def status():
     return jsonify({"status": "ok", "time": datetime.utcnow().isoformat()})
 
 # ---------------------------
-# Main entry (local run)
+# Run
 # ---------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    logger.info(f"Starting EduQuest app on 0.0.0.0:{port} (debug={app.config['DEBUG']})")
+    logger.info("Starting EduQuest app on 0.0.0.0:%s (debug=%s)", port, app.config["DEBUG"])
     app.run(host="0.0.0.0", port=port, debug=app.config["DEBUG"])

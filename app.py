@@ -19,11 +19,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("eduquest")
 
 # ---------------------------
-# Flask app + config (CRITICAL CHANGE HERE)
+# Flask app + config (CLEANED FIX HERE)
 # ---------------------------
-# The fix: Set template_folder to '.' (current directory) 
-# because HTML files are placed in the root, not a 'templates' folder.
-app = Flask(__name__, static_folder="static", template_folder=".")
+# FIX: Removed template_folder="." because HTML files are now moved to the 
+# standard 'templates' folder, which Flask automatically finds.
+app = Flask(__name__, static_folder="static")
 
 # Secret key from environment
 app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))

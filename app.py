@@ -1,4 +1,3 @@
-# app.py
 """
 EduQuest Academy - Flask application (single-file)
 Ready for Render deployment using: gunicorn app:app
@@ -23,18 +22,26 @@ logger = logging.getLogger("eduquest")
 # Flask app + config
 # ---------------------------
 app = Flask(__name__, static_folder="static", template_folder="templates")
-app.secret_key = os.environ.get("EDUQUEST_SECRET_KEY") or os.urandom(24)
-app.config['DEBUG'] = bool(int(os.environ.get("FLASK_DEBUG", "0")))
+
+# Secret key from environment
+app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
+
+# Debug mode (safe handling of different env values)
+flask_debug = os.environ.get("FLASK_DEBUG", "0").lower()
+if flask_debug in ["1", "true", "debug"]:
+    app.config['DEBUG'] = True
+else:
+    app.config['DEBUG'] = False
 
 # ---------------------------
-# Email configuration
+# Email configuration from ENV
 # ---------------------------
-SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "")
-SENDER_PASSWORD = os.environ.get("SENDER_PASSWORD", "")
-RECIPIENT_EMAIL = os.environ.get("RECIPIENT_EMAIL", "")
+SENDER_EMAIL = os.environ.get("EMAIL_HOST_USER", "")
+SENDER_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+RECIPIENT_EMAIL = os.environ.get("RECIPIENT_EMAIL", SENDER_EMAIL)  # fallback
 
 # ---------------------------
-# Simulated data stores
+# Simulated data stores (replace with DB in production)
 # ---------------------------
 SAMPLE_PASSWORDS = {
     "admin_pw": generate_password_hash("8803"),
@@ -97,7 +104,7 @@ COURSE_DETAILS = {
 }
 
 # ---------------------------
-# Helper functions
+# Helper utilities
 # ---------------------------
 def get_student_by_username(username):
     for s in STUDENTS.values():
@@ -141,11 +148,26 @@ def send_registration_email(form_data: dict) -> bool:
         return False
 
 # ---------------------------
-# Routes: Public pages
+# Routes: Public + Pages
 # ---------------------------
 @app.route("/")
 def home():
     return render_template("home.html")
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        form_data = request.form.to_dict()
+        logger.info("Received registration form: %s", form_data)
+        send_registration_email(form_data)
+        session['registration_name'] = form_data.get("full_name", "Valued Student")
+        return redirect(url_for("registration_success"))
+    return render_template("registration.html")
+
+@app.route("/registration_success")
+def registration_success():
+    name = session.pop("registration_name", "Valued Student")
+    return render_template("registration_success.html", name=name)
 
 @app.route("/about")
 def about():
@@ -175,21 +197,6 @@ def advance_phase():
 def terms_and_conditions():
     return render_template("terms_and_conditions.html")
 
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if request.method == "POST":
-        form_data = request.form.to_dict()
-        logger.info("Received registration form: %s", form_data)
-        send_registration_email(form_data)
-        session['registration_name'] = form_data.get("full_name", "Valued Student")
-        return redirect(url_for("registration_success"))
-    return render_template("registration.html")
-
-@app.route("/registration_success")
-def registration_success():
-    name = session.pop("registration_name", "Valued Student")
-    return render_template("registration_success.html", name=name)
-
 # ---------------------------
 # Authentication
 # ---------------------------
@@ -205,8 +212,10 @@ def teacher_login():
             session["user_type"] = "teacher"
             session["username"] = username
             session["role"] = teacher.get("role", "teacher")
+            logger.info("Teacher logged in: %s", username)
             return redirect(url_for("unified_teacher_dashboard"))
-        return render_template("teacher_login.html", error="Invalid username or password.")
+        else:
+            return render_template("teacher_login.html", error="Invalid username or password.")
     return render_template("teacher_login.html")
 
 @app.route("/student_login", methods=["GET", "POST"])
@@ -221,8 +230,10 @@ def student_login():
             session["user_type"] = "student"
             session["username"] = student["username"]
             session["student_id"] = student["id"]
+            logger.info("Student logged in: %s", student["username"])
             return redirect(url_for("student_dashboard"))
-        return render_template("student_login.html", error="Invalid student username or password.")
+        else:
+            return render_template("student_login.html", error="Invalid student username or password.")
     return render_template("student_login.html")
 
 # ---------------------------
@@ -277,115 +288,45 @@ def student_dashboard():
     return render_template("student_dashboard.html", student=student_view)
 
 # ---------------------------
-# Student profile & course pages
+# Logout
 # ---------------------------
-@app.route("/my_course")
-def my_course():
-    if session.get("user_type") != "student":
-        return redirect(url_for("student_login"))
-    student = get_student_by_username(session.get("username"))
-    course_name = student.get("course")
-    course_info = COURSE_DETAILS.get(course_name, {"description": "No info", "modules": []})
-    return render_template("my_course.html", student=student, course_info=course_info)
-
-@app.route("/student_profile")
-def student_profile():
-    if session.get("user_type") != "student":
-        return redirect(url_for("student_login"))
-    student = get_student_by_username(session.get("username"))
-    return render_template("student_profile.html", student=student)
-
-@app.route("/submit_profile", methods=["POST"])
-def submit_profile():
-    if session.get("user_type") != "student":
-        return redirect(url_for("student_login"))
-    full_name = request.form.get("full_name")
-    learning_goals = request.form.get("learning_goals")
-    experience_level = request.form.get("experience_level")
-    logger.info("Profile submitted: %s | %s | %s", full_name, learning_goals, experience_level)
-    return render_template("profile_confirmation.html", name=full_name, goals=learning_goals, experience=experience_level)
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("home"))
 
 # ---------------------------
-# Payments & invoices
+# Health / debug endpoint
 # ---------------------------
-def get_invoice(student_username, invoice_id):
-    student = get_student_by_username(student_username)
-    if not student:
-        return None, None
-    invoices = [
-        {"id": "INV-9021", "date": "2025-09-01", "amount": 2500000, "status": "Paid"},
-        {"id": "INV-9022", "date": "2025-10-15", "amount": 3200000, "status": "Unpaid"}
-    ]
-    inv = next((i for i in invoices if i["id"] == invoice_id), None)
-    return student, inv
-
-@app.route("/payments")
-def payments():
-    if session.get("user_type") != "student":
-        return redirect(url_for("student_login"))
-    student = get_student_by_username(session.get("username"))
-    invoices = [
-        {"id": "INV-9021", "date": "2025-09-01", "amount": 2500000, "status": "Paid"},
-        {"id": "INV-9022", "date": "2025-10-15", "amount": 3200000, "status": "Unpaid"}
-    ]
-    return render_template("invoices.html", student=student, invoices=invoices)
-
-@app.route("/vietqr_details/<invoice_id>")
-def vietqr_details(invoice_id):
-    if session.get("user_type") != "student":
-        return redirect(url_for("student_login"))
-    student, inv = get_invoice(session.get("username"), invoice_id)
-    if not inv:
-        return redirect(url_for("payments"))
-    return render_template("vietqr_details.html", student=student, invoice=inv)
-
-@app.route("/international_details/<invoice_id>")
-def international_details(invoice_id):
-    if session.get("user_type") != "student":
-        return redirect(url_for("student_login"))
-    student, inv = get_invoice(session.get("username"), invoice_id)
-    if not inv:
-        return redirect(url_for("payments"))
-    return render_template("international_details.html", student=student, invoice=inv)
+@app.route("/_status")
+def status():
+    return jsonify({"status": "ok", "timestamp": datetime.utcnow().isoformat()})
 
 # ---------------------------
-# Admin actions
-# ---------------------------
-@app.route("/admin/update_assignment", methods=["POST"])
-def update_assignment():
-    if session.get("user_type") != "teacher" or session.get("role") != "admin":
-        return redirect(url_for("teacher_login"))
-    assignment = request.form.get("assignment")
-    logger.info("Admin updated assignment: %s", assignment)
-    return redirect(url_for("unified_teacher_dashboard"))
-
-@app.route("/admin/update_lesson", methods=["POST"])
-def update_lesson():
-    if session.get("user_type") != "teacher" or session.get("role") != "admin":
-        return redirect(url_for("teacher_login"))
-    lesson = request.form.get("lesson")
-    logger.info("Admin updated lesson: %s", lesson)
-    return redirect(url_for("unified_teacher_dashboard"))
-
-# ---------------------------
-# Chatbot API
+# API for chatbot
 # ---------------------------
 @app.route("/api/chat", methods=["POST"])
-def api_chat():
-    data = request.get_json(force=True)
-    message = data.get("message", "")
-    # Simple echo + keyword highlighting
-    response_text = f"I received your message: **{message}**"
-    if "schedule" in message.lower():
-        response_text = "Your upcoming classes are on Monday and Thursday evenings."
-    elif "payment" in message.lower():
-        response_text = "You can view and pay your invoices under 'Payments'."
-    elif "course" in message.lower():
-        response_text = "Please visit the 'Courses' page to see available options."
-    return jsonify({"response": response_text})
+def chatbot_api():
+    data = request.get_json()
+    message = data.get("message", "").lower()
+    logger.info("Chatbot received: %s", message)
+
+    # Example: simple keyword responses
+    if "schedule" in message:
+        response = "Your next class is on Friday at 19:00."
+    elif "payment" in message:
+        response = "You can complete payments via the 'Payments' button on the homepage."
+    elif "level" in message:
+        response = "Please take our placement test to determine your course level."
+    elif "let's go" in message or "lets go" in message:
+        response = "Let's Go is our Foundation Phase interactive course for beginners."
+    else:
+        response = "I'm here to help! Could you please rephrase your question or choose one of the quick queries?"
+
+    return jsonify({"response": response})
 
 # ---------------------------
-# Run app locally
+# Run (only for local dev)
 # ---------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

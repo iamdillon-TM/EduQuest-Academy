@@ -69,7 +69,7 @@ TEACHERS = {
     }
 }
 
-# --- UPDATED STUDENTS DATA with invoices for new routes ---
+# --- STUDENTS DATA with invoices for new routes ---
 STUDENTS = {
     "S101": {
         "id": "S101",
@@ -145,6 +145,7 @@ def send_registration_email(form_data: dict) -> bool:
         return True
 
     try:
+        # Note: Gmail SMTP may require 'Less secure app access' or an App Password
         msg = MIMEMultipart()
         msg['From'] = SENDER_EMAIL
         msg['To'] = RECIPIENT_EMAIL
@@ -193,14 +194,18 @@ def register():
 @app.route("/registration_success")
 def registration_success():
     name = session.pop("registration_name", "Valued Student")
-    return render_template("registration_success.html", name=name)
+    # You need a registration_success.html template, or simply change this to:
+    # return "Registration successful! Thank you, {}.".format(name)
+    return render_template("registration_success.html", name=name) 
 
 @app.route("/about")
 def about():
+    # about.html template needed
     return render_template("about.html")
 
 @app.route("/contact")
 def contact():
+    # contact.html template needed
     return render_template("contact.html")
 
 @app.route("/courses")
@@ -221,6 +226,7 @@ def advance_phase():
 
 @app.route("/terms_and_conditions")
 def terms_and_conditions():
+    # terms_and_conditions.html template needed
     return render_template("terms_and_conditions.html")
 
 # ---------------------------
@@ -242,6 +248,7 @@ def teacher_login():
             return redirect(url_for("unified_teacher_dashboard"))
         else:
             return render_template("teacher_login.html", error="Invalid username or password.")
+    # teacher_login.html template needed
     return render_template("teacher_login.html")
 
 @app.route("/student_login", methods=["GET", "POST"])
@@ -260,6 +267,7 @@ def student_login():
             return redirect(url_for("student_dashboard"))
         else:
             return render_template("student_login.html", error="Invalid student username or password.")
+    # student_login.html template needed
     return render_template("student_login.html")
 
 # ---------------------------
@@ -288,6 +296,7 @@ def unified_teacher_dashboard():
         "all_students": list(STUDENTS.values()) if is_admin else None,
         "all_teachers": list(TEACHERS.keys()) if is_admin else None
     }
+    # teacher_dashboard.html template needed
     return render_template("teacher_dashboard.html", teacher=context)
 
 @app.route("/student_dashboard")
@@ -377,6 +386,7 @@ def payment_options(invoice_id):
         
     invoice = get_invoice_by_id(student["id"], invoice_id)
     if not invoice:
+        # Better to return a rendered error template in a real app
         return f"Invoice {invoice_id} not found.", 404
     
     return render_template(
@@ -398,7 +408,8 @@ def international_details(invoice_id):
     if not invoice:
         return f"Invoice {invoice_id} not found.", 404
 
-    student_view = {"username": student["username"]}
+    # Pass the student's username for the required reference in the template
+    student_view = {"username": student["username"]} 
     
     return render_template(
         "international_details.html", 

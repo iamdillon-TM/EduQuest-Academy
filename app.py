@@ -69,6 +69,7 @@ TEACHERS = {
     }
 }
 
+# --- UPDATED STUDENTS DATA with invoices for new routes ---
 STUDENTS = {
     "S101": {
         "id": "S101",
@@ -78,7 +79,11 @@ STUDENTS = {
         "course": "Let's Begin",
         "progress": "40%",
         "next_class": "2025-10-18 19:00",
-        "assigned_teacher": "Dillon"
+        "assigned_teacher": "Dillon",
+        "invoices": [
+            {"id": "INV-20251001", "date": "2025-10-01", "amount": 4000000, "status": "Paid"},
+            {"id": "INV-20251101", "date": "2025-11-01", "amount": 4000000, "status": "Unpaid"}
+        ]
     },
     "S102": {
         "id": "S102",
@@ -88,20 +93,28 @@ STUDENTS = {
         "course": "Intermediate Phase",
         "progress": "75%",
         "next_class": "2025-10-20 17:00",
-        "assigned_teacher": "Sarah"
+        "assigned_teacher": "Sarah",
+        "invoices": [
+            {"id": "INV-20250915", "date": "2025-09-15", "amount": 4800000, "status": "Paid"},
+            {"id": "INV-20251015", "date": "2025-10-15", "amount": 4800000, "status": "Unpaid"}
+        ]
     }
 }
+# ---------------------------------------------------------
 
 COURSE_DETAILS = {
     "Let's Begin (Foundation Phase)": {
-        "description": "Foundation course for absolute beginners.",
-        "modules": ["Module 1", "Module 2", "Module 3"]
+        "description": "Foundation course for absolute beginners. Focuses on core grammar, basic vocabulary, and simple conversation structures.",
+        "modules": ["Module 1: Greetings & Introductions", "Module 2: Daily Routines", "Module 3: Telling Time", "Module 4: Simple Past Tense", "Module 5: Future Plans"]
     },
     "Intermediate Phase (B1)": {
-        "description": "Intermediate course",
-        "modules": ["Module 6", "Module 7", "Module 8"]
+        "description": "Intermediate course focusing on fluency, complex grammar, and practical application in real-world scenarios. Essential for B1 certification.",
+        "modules": ["Module 6: Conditional Statements", "Module 7: Narrative Tenses", "Module 8: Expressing Opinions", "Module 9: Reading Comprehension", "Module 10: Debate Skills"]
     }
 }
+
+# Mock progress data used for student-facing pages
+STUDENT_MOCK_PROGRESS = {"total_lessons": 20, "lessons_completed": 8, "lessons_remaining": 12, "next_topic": "Unit 10: Presenting Your Ideas"}
 
 # ---------------------------
 # Helper utilities
@@ -110,6 +123,19 @@ def get_student_by_username(username):
     for s in STUDENTS.values():
         if s.get("username") and s["username"].lower() == username.lower():
             return s
+    return None
+
+def get_full_course_key(short_name):
+    # Attempts to find the full key in COURSE_DETAILS based on the short name stored in student data
+    for key in COURSE_DETAILS:
+        if short_name in key:
+            return key
+    return None
+
+def get_invoice_by_id(student_id, invoice_id):
+    student = next((s for s in STUDENTS.values() if s["id"] == student_id), None)
+    if student:
+        return next((i for i in student.get("invoices", []) if i["id"] == invoice_id), None)
     return None
 
 def send_registration_email(form_data: dict) -> bool:
@@ -274,18 +300,112 @@ def student_dashboard():
         session.clear()
         return redirect(url_for("student_login"))
 
+    # Use the mock progress data for consistency across student pages
     student_view = {
         "username": student["username"],
         "full_name": student["name"],
         "email": f"{student['username'].lower()}@eduquest.com",
         "current_package": student["course"],
         "teacher": student["assigned_teacher"],
-        "course_progress": {"total_lessons": 20, "lessons_completed": 8, "lessons_remaining": 12, "next_topic": "Unit 10: ..."},
+        "course_progress": STUDENT_MOCK_PROGRESS, # Use the shared mock data
         "upcoming_classes": [
-            {"date": "2025-10-18", "time": "19:00 - 20:00", "topic": "Unit 9", "teacher": student["assigned_teacher"]}
+            {"date": student["next_class"].split(" ")[0], "time": "19:00 - 20:00", "topic": "Unit 9", "teacher": student["assigned_teacher"]}
         ]
     }
     return render_template("student_dashboard.html", student=student_view)
+
+# ---------------------------
+# Student Portal Routes (New)
+# ---------------------------
+
+@app.route("/my_course")
+def my_course():
+    if session.get("user_type") != "student":
+        return redirect(url_for("student_login"))
+
+    student = get_student_by_username(session.get("username"))
+    if not student:
+        session.clear()
+        return redirect(url_for("student_login"))
+
+    course_name = student["course"]
+    full_course_key = get_full_course_key(course_name)
+
+    course_info = COURSE_DETAILS.get(full_course_key, {
+        "description": "Course details not found. Please contact support.", 
+        "modules": ["N/A"]
+    })
+    
+    # Pass student with course progress data for the template
+    student_for_template = {
+        "course_progress": STUDENT_MOCK_PROGRESS,
+    }
+    
+    return render_template(
+        "my_course.html", 
+        course_name=course_name,
+        course_info=course_info,
+        student=student_for_template
+    )
+
+@app.route("/invoices")
+def invoices():
+    if session.get("user_type") != "student":
+        return redirect(url_for("student_login"))
+
+    student = get_student_by_username(session.get("username"))
+    if not student:
+        session.clear()
+        return redirect(url_for("student_login"))
+
+    student_view = {
+        "full_name": student["name"],
+        "invoices": student.get("invoices", [])
+    }
+    
+    return render_template("invoices.html", student=student_view)
+
+@app.route("/payment_options/<invoice_id>")
+def payment_options(invoice_id):
+    if session.get("user_type") != "student":
+        return redirect(url_for("student_login"))
+        
+    student = get_student_by_username(session.get("username"))
+    if not student:
+        session.clear()
+        return redirect(url_for("student_login"))
+        
+    invoice = get_invoice_by_id(student["id"], invoice_id)
+    if not invoice:
+        return f"Invoice {invoice_id} not found.", 404
+    
+    return render_template(
+        "payments.html", 
+        invoice=invoice # Passed to allow the template to build the international_details link
+    )
+
+@app.route("/international_details/<invoice_id>")
+def international_details(invoice_id):
+    if session.get("user_type") != "student":
+        return redirect(url_for("student_login"))
+        
+    student = get_student_by_username(session.get("username"))
+    if not student:
+        session.clear()
+        return redirect(url_for("student_login"))
+        
+    invoice = get_invoice_by_id(student["id"], invoice_id)
+    if not invoice:
+        return f"Invoice {invoice_id} not found.", 404
+
+    student_view = {"username": student["username"]}
+    
+    return render_template(
+        "international_details.html", 
+        invoice=invoice,
+        student=student_view
+    )
+
 
 # ---------------------------
 # Logout

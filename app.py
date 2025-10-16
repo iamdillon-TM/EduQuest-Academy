@@ -21,7 +21,8 @@ logger = logging.getLogger("eduquest")
 # ---------------------------
 # Flask app + config
 # ---------------------------
-app = Flask(__name__, static_folder="static", template_folder="templates")
+# <<< CRITICAL FIX: Set both folders to the root directory (.)
+app = Flask(__name__, static_folder=".", template_folder=".")
 
 # Secret key from environment
 app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
@@ -117,7 +118,7 @@ COURSE_DETAILS = {
 STUDENT_MOCK_PROGRESS = {"total_lessons": 20, "lessons_completed": 8, "lessons_remaining": 12, "next_topic": "Unit 10: Presenting Your Ideas"}
 
 # ---------------------------
-# Helper utilities
+# Helper utilities (Omitted for brevity, but included in the final file)
 # ---------------------------
 def get_student_by_username(username):
     for s in STUDENTS.values():
@@ -194,18 +195,17 @@ def register():
 @app.route("/registration_success")
 def registration_success():
     name = session.pop("registration_name", "Valued Student")
-    # You need a registration_success.html template, or simply change this to:
-    # return "Registration successful! Thank you, {}.".format(name)
-    return render_template("registration_success.html", name=name) 
+    # Using a simple return here as registration_success.html was not provided
+    return f"Registration successful! Thank you, {name}. We will contact you shortly." 
 
 @app.route("/about")
 def about():
-    # about.html template needed
+    # Placeholder: Assuming 'about.html' is in the root
     return render_template("about.html")
 
 @app.route("/contact")
 def contact():
-    # contact.html template needed
+    # Placeholder: Assuming 'contact.html' is in the root
     return render_template("contact.html")
 
 @app.route("/courses")
@@ -226,7 +226,7 @@ def advance_phase():
 
 @app.route("/terms_and_conditions")
 def terms_and_conditions():
-    # terms_and_conditions.html template needed
+    # Placeholder: Assuming 'terms_and_conditions.html' is in the root
     return render_template("terms_and_conditions.html")
 
 # ---------------------------
@@ -248,7 +248,7 @@ def teacher_login():
             return redirect(url_for("unified_teacher_dashboard"))
         else:
             return render_template("teacher_login.html", error="Invalid username or password.")
-    # teacher_login.html template needed
+    # Placeholder: Assuming 'teacher_login.html' is in the root
     return render_template("teacher_login.html")
 
 @app.route("/student_login", methods=["GET", "POST"])
@@ -267,7 +267,7 @@ def student_login():
             return redirect(url_for("student_dashboard"))
         else:
             return render_template("student_login.html", error="Invalid student username or password.")
-    # student_login.html template needed
+    # Placeholder: Assuming 'student_login.html' is in the root
     return render_template("student_login.html")
 
 # ---------------------------
@@ -296,7 +296,7 @@ def unified_teacher_dashboard():
         "all_students": list(STUDENTS.values()) if is_admin else None,
         "all_teachers": list(TEACHERS.keys()) if is_admin else None
     }
-    # teacher_dashboard.html template needed
+    # Placeholder: Assuming 'teacher_dashboard.html' is in the root
     return render_template("teacher_dashboard.html", teacher=context)
 
 @app.route("/student_dashboard")
@@ -321,6 +321,7 @@ def student_dashboard():
             {"date": student["next_class"].split(" ")[0], "time": "19:00 - 20:00", "topic": "Unit 9", "teacher": student["assigned_teacher"]}
         ]
     }
+    # Placeholder: Assuming 'student_dashboard.html' is in the root
     return render_template("student_dashboard.html", student=student_view)
 
 # ---------------------------

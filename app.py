@@ -19,9 +19,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("eduquest")
 
 # ---------------------------
-# Flask app + config
+# Flask app + config (CRITICAL CHANGE HERE)
 # ---------------------------
-# CRITICAL FIX: Set template_folder to '.' (current directory) 
+# The fix: Set template_folder to '.' (current directory) 
 # because HTML files are placed in the root, not a 'templates' folder.
 app = Flask(__name__, static_folder="static", template_folder=".")
 
@@ -46,7 +46,7 @@ SMTP_SERVER = "smtp.gmail.com"  # Assuming Gmail or similar
 SMTP_PORT = 587
 
 # ---------------------------
-# DUMMY DATABASE/DATA STRUCTURE
+# DUMMY DATABASE/DATA STRUCTURE 
 # ---------------------------
 USERS = {
     # Dummy user for testing login
@@ -110,8 +110,6 @@ def send_email(subject, body, recipient):
         return True
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
-        # In a production app, this should be logged, but we return True 
-        # to avoid crashing the user experience with a 500 error.
         return False 
 
 def get_student_data():
@@ -148,7 +146,6 @@ def advance_phase():
 
 @app.route("/contact")
 def contact():
-    # Placeholder for a contact page if you build one later
     return "Contact Page Coming Soon!"
 
 
@@ -166,7 +163,6 @@ def login():
         else:
             return render_template("login.html", error="Invalid username or password.")
     
-    # NOTE: Assuming login.html is in the root too
     return render_template("login.html")
 
 
@@ -189,10 +185,8 @@ def registration():
         )
         send_email(subject, body, RECIPIENT_EMAIL)
         
-        # 2. Send confirmation to user (optional, can be done later)
-        
-        # 3. Redirect to a thank you page
-        return redirect(url_for("home")) # Redirect to home for now
+        # 2. Redirect to a thank you page
+        return redirect(url_for("home")) 
 
     return render_template("registration.html")
 

@@ -19,10 +19,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("eduquest")
 
 # ---------------------------
-# Flask app + config (CLEANED FIX HERE)
+# Flask app + config
 # ---------------------------
-# FIX: Removed template_folder="." because HTML files are now moved to the 
-# standard 'templates' folder, which Flask automatically finds.
+# Flask automatically finds the 'templates' folder and the 'static' folder.
 app = Flask(__name__, static_folder="static")
 
 # Secret key from environment
@@ -51,6 +50,8 @@ SMTP_PORT = 587
 USERS = {
     # Dummy user for testing login
     "teststudent": generate_password_hash("password123"),
+    # Dummy teacher
+    "testteacher": generate_password_hash("teacher456"),
 }
 
 INVOICES = {
@@ -83,6 +84,13 @@ STUDENT_DATA = {
     }
 }
 
+TEACHER_DATA = {
+    "username": "testteacher",
+    "full_name": "Ms. Evelyn Reed",
+    "class_count": 5,
+    "upcoming_class": "Intermediate Phase, 19:00 Friday",
+}
+
 # ---------------------------
 # Helper Functions
 # ---------------------------
@@ -112,11 +120,12 @@ def send_email(subject, body, recipient):
         logger.error(f"Failed to send email: {e}")
         return False 
 
-def get_student_data():
-    """Retrieves student data from the session."""
-    username = session.get('username')
+def get_user_data(username):
+    """Retrieves user data based on role."""
     if username == "teststudent":
         return STUDENT_DATA
+    if username == "testteacher":
+        return TEACHER_DATA
     return None
 
 # ---------------------------
@@ -126,32 +135,38 @@ def get_student_data():
 @app.route("/")
 @app.route("/home")
 def home():
+    # Renders: home.html
     return render_template("home.html")
 
 @app.route("/courses")
 def courses():
+    # Renders: courses.html
     return render_template("courses.html")
 
 @app.route("/foundation")
 def foundation_phase():
+    # Renders: foundation_phase.html
     return render_template("foundation_phase.html")
 
 @app.route("/intermediate")
 def intermediate_phase():
+    # Renders: intermediate_phase.html
     return render_template("intermediate_phase.html")
 
 @app.route("/advance")
 def advance_phase():
+    # Renders: advance_phase.html
     return render_template("advance_phase.html")
 
-@app.route("/contact")
-def contact():
-    return "Contact Page Coming Soon!"
-
+@app.route("/terms-and-conditions")
+def terms_and_conditions():
+    # Renders: terms_and_conditions.html
+    return render_template("terms_and_conditions.html")
 
 # --- Login/Auth Routes ---
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    # Renders: login.html
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
@@ -159,58 +174,124 @@ def login():
         if username in USERS and check_password_hash(USERS[username], password):
             session["logged_in"] = True
             session["username"] = username
-            return redirect(url_for("student_dashboard"))
+            
+            if "student" in username:
+                return redirect(url_for("student_dashboard"))
+            elif "teacher" in username:
+                return redirect(url_for("teacher_dashboard"))
+            else:
+                # Default to student dashboard for unknown role
+                return redirect(url_for("student_dashboard")) 
         else:
             return render_template("login.html", error="Invalid username or password.")
     
     return render_template("login.html")
 
+# Student-specific login for convenience (uses the same template)
+@app.route("/student-login")
+def student_login():
+    return render_template("student_login.html")
+
+# Teacher-specific login for convenience (uses the same template)
+@app.route("/teacher-login")
+def teacher_login():
+    return render_template("teacher_login.html")
+
 
 # --- Registration Routes ---
 @app.route("/registration", methods=["GET", "POST"])
 def registration():
+    # Renders: registration.html
     if request.method == "POST":
         data = request.form
         
         # 1. Send internal notification email
-        subject = f"New Course Registration from {data['parent_name']}"
+        subject = f"New Course Registration from {data.get('parent_name', 'N/A')}"
         body = (
             f"Registration Details:\n"
-            f"Parent: {data['parent_name']} ({data['parent_email']})\n"
-            f"Student: {data['student_name']} (Age: {data['student_age']})\n"
-            f"Course: {data['course_phase']} ({data['course_level']})\n"
-            f"Format: {data['class_format']}\n"
-            f"Timezone: {data['timezone']}\n"
-            f"Notes: {data['notes']}\n"
+            f"Parent: {data.get('parent_name', 'N/A')} ({data.get('parent_email', 'N/A')})\n"
+            f"Student: {data.get('student_name', 'N/A')} (Age: {data.get('student_age', 'N/A')})\n"
+            f"Course: {data.get('course_phase', 'N/A')} ({data.get('course_level', 'N/A')})\n"
+            f"Format: {data.get('class_format', 'N/A')}\n"
+            f"Timezone: {data.get('timezone', 'N/A')}\n"
+            f"Notes: {data.get('notes', 'N/A')}\n"
         )
         send_email(subject, body, RECIPIENT_EMAIL)
         
         # 2. Redirect to a thank you page
-        return redirect(url_for("home")) 
+        return redirect(url_for("registration_success")) 
 
     return render_template("registration.html")
 
+@app.route("/registration-success")
+def registration_success():
+    """Renders the success page after registration."""
+    # Renders: registration_success.html
+    return render_template("registration_success.html")
+
 
 # --- Dashboard Routes (Requires Login) ---
-@app.route("/dashboard")
+
+# Student Dashboard
+@app.route("/student-dashboard")
 def student_dashboard():
+    # Renders: student_dashboard.html
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     
-    student = get_student_data()
-    if not student:
+    username = session.get('username')
+    student = get_user_data(username)
+    
+    if not student or "student" not in username:
         session.clear()
         return redirect(url_for('login'))
 
-    return render_template("student_dashboard.html", student=student)
+    return render_template("student_dashboard.html", user=student)
 
-@app.route("/my-course")
-def my_course():
+# Student Profile
+@app.route("/student-profile")
+def student_profile():
+    # Renders: student_profile.html
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     
-    student = get_student_data()
-    if not student:
+    username = session.get('username')
+    student = get_user_data(username)
+    
+    if not student or "student" not in username:
+        session.clear()
+        return redirect(url_for('login'))
+
+    return render_template("student_profile.html", user=student)
+
+
+# Teacher Dashboard
+@app.route("/teacher-dashboard")
+def teacher_dashboard():
+    # Renders: teacher_dashboard.html
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    
+    username = session.get('username')
+    teacher = get_user_data(username)
+
+    if not teacher or "teacher" not in username:
+        session.clear()
+        return redirect(url_for('login'))
+
+    return render_template("teacher_dashboard.html", user=teacher)
+
+
+@app.route("/my-course")
+def my_course():
+    # Renders: my_course.html
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    
+    username = session.get('username')
+    student = get_user_data(username)
+    
+    if not student or "student" not in username:
         session.clear()
         return redirect(url_for('login'))
 
@@ -223,11 +304,14 @@ def my_course():
 
 @app.route("/invoices")
 def invoices():
+    # Renders: invoices.html
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     
-    student = get_student_data()
-    if not student:
+    username = session.get('username')
+    student = get_user_data(username)
+    
+    if not student or "student" not in username:
         session.clear()
         return redirect(url_for('login'))
 
@@ -237,6 +321,7 @@ def invoices():
 # --- Payment Routes ---
 @app.route("/payments/<int:invoice_id>")
 def payment_options(invoice_id):
+    # Renders: payments.html
     invoice = INVOICES.get(invoice_id)
     
     if not invoice:
@@ -246,7 +331,10 @@ def payment_options(invoice_id):
 
 @app.route("/international/<int:invoice_id>")
 def international_details(invoice_id):
-    student = get_student_data()
+    # Renders: international_details.html
+    username = session.get('username')
+    student = get_user_data(username)
+    
     if not student:
         return redirect(url_for('login')) 
     
@@ -257,6 +345,27 @@ def international_details(invoice_id):
 
     return render_template(
         "international_details.html", 
+        invoice=invoice, 
+        student=student
+    )
+
+@app.route("/vietqr/<int:invoice_id>")
+def vietqr_details(invoice_id):
+    # Renders: vietqr_details.html
+    # Dummy logic to check for login/invoice, similar to international_details
+    username = session.get('username')
+    student = get_user_data(username)
+    
+    if not student:
+        return redirect(url_for('login')) 
+    
+    invoice = INVOICES.get(invoice_id)
+    
+    if not invoice:
+        abort(404, description="Invoice not found.")
+
+    return render_template(
+        "vietqr_details.html", 
         invoice=invoice, 
         student=student
     )

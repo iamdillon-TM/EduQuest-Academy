@@ -21,7 +21,6 @@ logger = logging.getLogger("eduquest")
 # ---------------------------
 # Flask app + config
 # ---------------------------
-# Flask automatically finds the 'templates' folder and the 'static' folder.
 app = Flask(__name__, static_folder="static")
 
 # Secret key from environment
@@ -134,7 +133,7 @@ def get_user_data(username):
     """Retrieves user data based on role."""
     if username == "teststudent":
         return STUDENT_DATA
-    if username == "testteacher":
+    if username == "testteacher" or username == "Dillon":
         return TEACHER_DATA
     return None
 
@@ -148,7 +147,6 @@ def home():
     # Renders: home.html
     return render_template("home.html")
 
-# FIX 1: Added the missing /contact route
 @app.route("/contact")
 def contact():
     # Renders: contact.html
@@ -159,17 +157,20 @@ def courses():
     # Renders: courses.html
     return render_template("courses.html")
 
-@app.route("/foundation")
+# FIX 1: Renamed '/foundation' to '/foundation_phase' to match HTML url_for('foundation_phase')
+@app.route("/foundation_phase")
 def foundation_phase():
     # Renders: foundation_phase.html
     return render_template("foundation_phase.html")
 
-@app.route("/intermediate")
+# FIX 2: Renamed '/intermediate' to '/intermediate_phase' to match HTML url_for('intermediate_phase')
+@app.route("/intermediate_phase")
 def intermediate_phase():
     # Renders: intermediate_phase.html
     return render_template("intermediate_phase.html")
 
-@app.route("/advance")
+# FIX 3: Renamed '/advance' to '/advance_phase' to match HTML url_for('advance_phase')
+@app.route("/advance_phase")
 def advance_phase():
     # Renders: advance_phase.html
     return render_template("advance_phase.html")
@@ -180,9 +181,11 @@ def terms_and_conditions():
     return render_template("terms_and_conditions.html")
 
 # --- Login/Auth Routes ---
-@app.route("/login", methods=["GET", "POST"])
+
+# FIX 4: Changed /login to redirect to the student_login endpoint
+@app.route("/login")
 def login():
-    # Generic login redirects to student login
+    """Generic /login route used by nav bar. Redirects to student login."""
     return redirect(url_for('student_login'))
 
 # Student-specific login 
@@ -329,6 +332,9 @@ def teacher_dashboard():
         admin_view_data['status'] = "Superuser"
         admin_view_data['email'] = "dillon@eduquest.academy"
         teacher = admin_view_data
+    # If the user is a teacher, use the mock teacher data
+    elif teacher is None:
+        teacher = TEACHER_DATA # Fallback if get_user_data didn't return anything specific for the teacher role
 
     return render_template("teacher_dashboard.html", teacher=teacher)
 
@@ -368,11 +374,11 @@ def invoices():
 
     return render_template("invoices.html", student=student)
 
-# FIX 2: Added a simple redirect to support templates linking to 'payments' 
-# which should really point to 'invoices'. This solves the BuildError in the logs.
+# FIX 5: Renamed '/payments' to 'invoices_redirect' (and updated the logic to redirect to the actual invoices route).
+# This prevents a conflict with the later payment_options route and maintains the URL used in the home.html nav button.
 @app.route("/payments")
-def payments():
-    """Redirects the endpoint used by home.html to the working invoices page."""
+def invoices_redirect():
+    """Redirects the endpoint used by home.html to the correct invoices page."""
     return redirect(url_for('invoices'))
 
 # --- Payment Routes ---
@@ -458,13 +464,13 @@ def chatbot_api():
 
     # Example: simple keyword responses
     if "schedule" in message:
-        response = "Your next class is on **Friday at 19:00**."
+        response = "Our classes are primarily in the evenings (Vietnam Time) and on weekends. Your specific schedule is available on your **Dashboard**."
     elif "payment" in message:
-        response = "You can complete payments via the **'Payments'** button on the homepage, or view invoices on your **Dashboard**."
+        response = "You can find all pricing and payment options on the **Payments** page. We accept VietQR, bank transfer, and PayPal."
     elif "level" in message:
-        response = "Please take our **placement test** to determine your course level."
-    elif "let's go" in message or "lets go" in message:
-        response = "**Let's Go** is our Foundation Phase interactive course for beginners (Ages 6-10)."
+        response = "We offer a free assessment trial class! Please sign up on the **Registration** page to book your trial."
+    elif "let's go" in message or "lets go" in message or "foundation" in message:
+        response = "**Let's Go** is our Foundation Phase interactive course for beginners (Ages 6-10). Check the **Courses** page for more details!"
     else:
         response = "I'm here to help! Could you please rephrase your question or choose one of the quick queries (schedule, payment, level, Let's Go)?"
 
@@ -474,4 +480,6 @@ def chatbot_api():
 # Run (only for local development)
 # ---------------------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    # Note: Setting debug=False for the production environment is handled by the config block at the top
+    app.run(host='0.0.0.0', port=port, debug=app.config['DEBUG'])

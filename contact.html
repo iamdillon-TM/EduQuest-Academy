@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact EduQuest Academy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #f4f7f6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #2575fc;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+        p {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 30px;
+        }
+        .email-link {
+            display: inline-block;
+            padding: 15px 30px;
+            /* Using a primary button color */
+            background-color: #007A44; 
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+        .email-link:hover {
+            background-color: #005F36; /* Darker shade on hover */
+            transform: translateY(-2px);
+        }
+        .email-link:active {
+            transform: translateY(0);
+        }
+        .instructions {
+            margin-top: 40px;
+            font-size: 14px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Contact Us</h2>
+        <p>
+            For enrollment inquiries, technical support, or general questions, please click the button below to email the administration.
+        </p>
+
+        <a 
+            href="mailto:Admin@eduquest.com" 
+            class="email-link"
+        >
+            Email Administration Now 📧
+        </a>
+
+        <div class="instructions">
+            <p>Your email client will open automatically.</p>
+            <p>Need to go back? <a href="{{ url_for('home') }}">Return to Home</a></p>
+        </div>
+    </div>
+</body>
+</html>

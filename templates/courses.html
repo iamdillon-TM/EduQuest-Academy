@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Courses - EduQuest Academy</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+body {
+    margin:0;
+    padding:0;
+    font-family:'Montserrat', sans-serif;
+    /* FIX APPLIED HERE */
+    background: url('courses.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color: #fff; /* White text for dark background */
+}
+
+.overlay {
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background: rgba(0,0,0,0.65); /* Slightly darker overlay for better contrast */
+    z-index:1;
+}
+
+.content {
+    position: relative;
+    z-index:2;
+    padding: 60px 20px;
+    max-width:1100px; /* Slightly wider content area */
+    margin: auto;
+    text-align:center;
+}
+
+h1 {
+    font-family:'Playfair Display', serif;
+    font-size: 65px; /* Slightly larger heading */
+    margin-bottom:50px;
+    color: #ffcc00; /* Gold/yellow for a premium feel, matching home.html highlights */
+    text-shadow: 3px 3px 10px rgba(0,0,0,0.9); /* Stronger text shadow */
+}
+
+.phase-course {
+    background: rgba(255,255,255,0.95); /* Nearly opaque white cards for clarity */
+    color: #333;
+    padding: 30px 40px; /* More padding */
+    margin-bottom: 30px;
+    border-radius: 20px; /* Softer rounded corners */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4); /* Deeper shadow */
+    text-align:left;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.phase-course:hover {
+    transform: translateY(-8px); /* More pronounced lift */
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5); /* Even deeper shadow on hover */
+}
+
+.phase-course h2 {
+    font-family:'Playfair Display', serif;
+    font-size:32px; /* Larger course titles */
+    margin-bottom:15px;
+    color:#1e3c72; /* Dark blue/purple for headings */
+    border-bottom: 3px solid #ffcc00; /* Gold/Yellow separator */
+    padding-bottom: 10px;
+}
+
+.phase-course ul {
+    list-style-type: none; /* Remove bullet points */
+    padding: 0;
+    margin-top: 15px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.phase-course ul li {
+    background: #f4f4f4; /* Light gray background for list items */
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #555;
+    text-align: center;
+    border-left: 5px solid #1e3c72;
+}
+
+.phase-course p {
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+.enroll-btn {
+    display: inline-block;
+    padding: 12px 30px;
+    background-color: #ff9800; /* Orange/Gold button */
+    color: white;
+    font-weight: 700;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.enroll-btn:hover {
+    background-color: #e68900;
+}
+
+.home {
+    display: block;
+    margin-top: 40px;
+    color: #ffcc00;
+    font-size: 18px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s;
+}
+
+.home:hover {
+    color: white;
+}
+</style>
+</head>
+<body>
+<div class="overlay"></div>
+
+<div class="content">
+    <h1>Our Global Course Phases 🌍</h1>
+
+    <a href="{{ url_for('foundation_phase') }}" style="text-decoration:none;">
+        <div class="phase-course">
+            <h2>Foundation Phase: Let's Go! (Ages 6-10)</h2>
+            <p>
+                A high-energy, fun introduction to English fundamentals. Focuses on building a strong base through games, songs, and interactive activities.
+                <br>
+                **Key Learning Areas:**
+                <ul>
+                    <li>Basic Phonics & Pronunciation</li>
+                    <li>Core Vocabulary (Family, Animals, Colors)</li>
+                    <li>Simple Sentence Structures (I am, She has)</li>
+                    <li>Listening Comprehension</li>
+                    <li>Confidence in Speaking Simple Phrases</li>
+                </ul>
+            </p>
+            <span class="enroll-btn">Discover Foundation Phase</span>
+        </div>
+    </a>
+
+    <a href="{{ url_for('intermediate_phase') }}" style="text-decoration:none;">
+        <div class="phase-course">
+            <h2>Intermediate Phase: Skill Builder (Ages 11-14)</h2>
+            <p>
+                Designed for students transitioning from beginner to conversational English. Develops core grammar, conversational fluency, and elementary writing skills.
+                <br>
+                **Key Learning Areas:**
+                <ul>
+                    <li>Intermediate Grammar & Sentence Complexity</li>
+                    <li>Conversational Fluency & Discussion Skills</li>
+                    <li>Reading Comprehension & Critical Thinking</li>
+                    <li>Essay Writing & Opinion Expression</li>
+                    <li>Vocabulary Expansion for Richer Communication</li>
+                </ul>
+            </p>
+            <span class="enroll-btn">Explore Intermediate Phase</span>
+        </div>
+    </a>
+
+    <a href="{{ url_for('advance_phase') }}" style="text-decoration:none;">
+        <div class="phase-course">
+            <h2>Advanced Phase: Academic & Professional English</h2>
+            <p>
+                For high school students and adults aiming for academic excellence, career advancement, or international exams. Master nuanced communication and complex English.
+                <br>
+                **Key Learning Areas:**
+                <ul>
+                    <li>Academic Writing & Research Skills</li>
+                    <li>Public Speaking & Presentation Techniques</li>
+                    <li>Business English & Professional Communication</li>
+                    <li>Critical Analysis of Texts & Media</li>
+                    <li>IELTS/TOEFL/SAT English Preparation</li>
+                </ul>
+            </p>
+            <span class="enroll-btn">Unlock Advanced Phase</span>
+        </div>
+    </a>
+
+    <a href="{{ url_for('home') }}" class="home">← Return to Home</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ student.full_name }}'s Dashboard - EduQuest Academy</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body, html { height:100%; font-family:'Montserrat',sans-serif; background-color: #f4f7f9; }
+
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        background-color: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    /* --- WELCOME BANNER SECTION --- */
+    .welcome-banner {
+        position: relative;
+        height: 300px;
+        /* Ensure 'Students.jpg' is in your static folder */
+        background: url("{{ url_for('static', filename='Students.jpg') }}") no-repeat center center/cover;
+        color: #fff;
+        padding: 40px;
+        display: flex;
+        align-items: flex-end;
+    }
+    .banner-overlay {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3));
+    }
+    .banner-content {
+        position: relative;
+        z-index: 10;
+        text-align: left;
+    }
+    .banner-content h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 56px;
+        margin-bottom: 5px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+    .banner-content p {
+        font-size: 20px;
+        font-weight: 500;
+        opacity: 0.9;
+    }
+
+    /* --- MAIN BUTTONS MENU --- */
+    .main-menu {
+        display: flex;
+        justify-content: space-around;
+        padding: 30px;
+        background-color: #e6e9f2; /* Light background for the menu strip */
+        border-bottom: 1px solid #ddd;
+    }
+    .main-menu a {
+        flex-basis: 30%;
+        text-decoration: none;
+        padding: 15px 10px;
+        font-size: 18px;
+        font-weight: 700;
+        border-radius: 8px;
+        text-align: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .menu-btn-1 { 
+        background-color: #6c63ff; /* My Course */
+        color: white; 
+    }
+    .menu-btn-2 { 
+        background-color: #00e676; /* My Calendar */
+        color: #1e3c72; 
+    }
+    .menu-btn-3 { 
+        background-color: #ffeb3b; /* My Profile */
+        color: #4a4a4a; 
+    }
+    .main-menu a:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        opacity: 0.9;
+    }
+
+    /* --- DATA GRID CONTENT --- */
+    .data-content {
+        padding: 40px;
+    }
+    .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 40px;
+    }
+    .card {
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+    .card h2 {
+        color: #1e3c72;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    /* Progress Styling */
+    .progress-bar-container {
+        background-color: #ddd;
+        border-radius: 5px;
+        height: 25px;
+        margin-top: 10px;
+        overflow: hidden;
+    }
+    .progress-bar {
+        background-color: #00e676; 
+        height: 100%;
+        width: {{ (student.course_progress.lessons_completed / student.course_progress.total_lessons) * 100 }}%;
+        line-height: 25px;
+        text-align: right;
+        color: #1e3c72;
+        font-weight: 700;
+        padding-right: 8px;
+        box-sizing: border-box;
+    }
+
+    /* Schedule List Styling */
+    .schedule-list {
+        list-style: none;
+        padding: 0;
+    }
+    .schedule-item {
+        padding: 15px 0;
+        border-bottom: 1px dashed #eee;
+    }
+    .schedule-item strong {
+        color: #6c63ff;
+        display: block;
+        margin-bottom: 3px;
+    }
+    .schedule-item span {
+        font-size: 14px;
+        color: #666;
+    }
+
+    .logout-link {
+        display: block;
+        text-align: center;
+        margin-top: 30px;
+        font-size: 18px;
+        color: #e6005c;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .logout-link:hover {
+        text-decoration: underline;
+    }
+    
+    @media (max-width: 900px) {
+        .grid-container {
+            grid-template-columns: 1fr;
+        }
+        .main-menu {
+            flex-direction: column;
+            gap: 15px;
+        }
+        .main-menu a {
+            flex-basis: 100%;
+        }
+        .welcome-banner {
+            height: 200px;
+        }
+        .banner-content h1 {
+            font-size: 40px;
+        }
+        .banner-content p {
+            font-size: 16px;
+        }
+    }
+</style>
+
+<script>
+    function openGoogleCalendar() {
+        // This is a placeholder for the Google Calendar integration requested by the user.
+        alert("My Calendar: This page would show your booked lessons and offer a link/button to sync with your personal Google Calendar. (Feature requires API/OAuth integration)");
+    }
+</script>
+
+</head>
+<body>
+    <div class="dashboard-container">
+        
+        <div class="welcome-banner">
+            <div class="banner-overlay"></div>
+            <div class="banner-content">
+                <h1>Welcome, {{ student.full_name }}! 👋</h1>
+                <p>Ready to master Vietnamese? Let's check your progress and schedule.</p>
+            </div>
+        </div>
+
+        <div class="main-menu">
+            <a href="{{ url_for('my_course') }}" class="menu-btn-1">
+                My Course
+            </a>
+            <a href="#" class="menu-btn-2" onclick="openGoogleCalendar()">
+                My Calendar
+            </a>
+            <a href="{{ url_for('student_profile') }}" class="menu-btn-3">
+                My Profile
+            </a>
+        </div>
+
+        <div class="data-content">
+            <div class="grid-container">
+                
+                <div>
+                    <div class="card">
+                        <h2>📌 My Progress Summary</h2>
+                        <p><strong>Current Package:</strong> {{ student.current_package }}</p>
+                        <p><strong>Teacher:</strong> {{ student.teacher }}</p>
+                        <p>Lessons Completed: <strong>{{ student.course_progress.lessons_completed }}</strong> / 
+                            {{ student.course_progress.total_lessons }}</p>
+
+                        <div class="progress-bar-container">
+                            <div class="progress-bar">
+                                {{ (student.course_progress.lessons_completed / student.course_progress.total_lessons) * 100 | round(0) }}%
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>ℹ️ Profile Snapshot</h2>
+                        <p><strong>Email:</strong> {{ student.email }}</p>
+                        <p><strong>Lessons Remaining:</strong> <strong style="color: #e6005c;">{{ student.course_progress.lessons_remaining }}</strong></p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>📅 Upcoming Classes</h2>
+                    <ul class="schedule-list">
+                        {% for class in student.upcoming_classes %}
+                        <li class="schedule-item">
+                            <strong>{{ class.topic }}</strong>
+                            <span>Time: {{ class.time }} | Date: {{ class.date }}</span>
+                            <br><span>Teacher: {{ class.teacher }}</span>
+                        </li>
+                        {% else %}
+                        <li class="schedule-item">No upcoming classes scheduled.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <a href="{{ url_for('logout') }}" class="logout-link">🔒 Log Out Securely</a>
+
+    </div>
+</body>
+</html>

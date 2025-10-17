@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EduQuest Academy</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         /* --- HARMONIZED COLOR PALETTE --- */
         :root {
@@ -20,16 +20,15 @@
         body {
             margin: 0;
             font-family: "Poppins", sans-serif;
-            /* REMOVED background: url('homepage.png') FROM HERE */
             color: white;
             text-align: center;
             overflow-x: hidden;
-            /* Set position to relative so z-index works on children */
             position: relative; 
             min-height: 100vh;
         }
         
-        /* === BACKGROUND IMAGE CONTAINER (NEW FIX) === */
+        /* === BACKGROUND IMAGE CONTAINER (FIXED) === */
+        /* If the image still doesn't show, the issue is usually in this block or the file location/name. */
         #bg-image {
             position: fixed;
             top: 0;
@@ -37,23 +36,22 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            z-index: -2; /* Below the overlay */
+            z-index: -2; 
         }
         #bg-image img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Ensures image covers the whole area */
-            filter: brightness(0.65); /* Keeps the image dark for better text contrast */
+            object-fit: cover; 
+            filter: brightness(0.65); 
         }
 
-        /* === OVERLAY FOR READABILITY (Slightly adjusted z-index) === */
+        /* === OVERLAY FOR READABILITY === */
         body::before {
             content: "";
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            /* Softened overlay color to keep the image warmth */
-            background: rgba(0, 0, 0, 0.4); /* Less dark, relies on image filter now */
+            background: rgba(0, 0, 0, 0.4); 
             z-index: -1;
         }
 
@@ -75,7 +73,6 @@
             gap: 15px;
             z-index: 10;
         }
-
 
         .login-btn {
             background-color: var(--color-accent); 
@@ -129,8 +126,8 @@
         /* === HERO SECTION === */
         .hero {
             margin-top: 120px;
-            padding: 0 20px; /* Add padding for mobile */
-            z-index: 1; /* Bring content above overlay */
+            padding: 0 20px; 
+            z-index: 1; 
             position: relative;
         }
 
@@ -150,7 +147,7 @@
             white-space: nowrap;
             overflow: hidden;
             border-right: 3px solid var(--color-light);
-            display: inline-block; /* Essential for text-align center */
+            display: inline-block; 
         }
 
         /* === NAVIGATION BUTTONS (BIG BLUE) === */
@@ -211,7 +208,7 @@
             .top-right-buttons { justify-content: flex-end; }
         }
 
-        /* === CHATBOT STYLES (Kept your original styles) === */
+        /* === CHATBOT STYLES === */
         .chatbot {
             position: fixed;
             bottom: 20px;
@@ -456,7 +453,7 @@
             chatBody.scrollTop = chatBody.scrollHeight;
 
             try {
-                // 3. Send to API
+                // 3. Send to API (This assumes you have a working '/api/chat' endpoint in app.py)
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -468,7 +465,6 @@
                 const data = await response.json();
                 
                 // 4. Format and Display Bot Response
-                // Simple logic for bolding keywords (like in app.py's responses)
                 let reply = data.response.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                 
                 // Remove typing indicator and add final response

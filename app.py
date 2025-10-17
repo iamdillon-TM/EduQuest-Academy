@@ -148,6 +148,13 @@ def home():
     # Renders: home.html
     return render_template("home.html")
 
+# NEW ROUTE ADDED TO FIX BUILDERROR
+@app.route("/contact")
+def contact():
+    # Renders: contact.html (The template with the mailto link)
+    return render_template("contact.html")
+# END NEW ROUTE
+
 @app.route("/courses")
 def courses():
     # Renders: courses.html
@@ -176,7 +183,7 @@ def terms_and_conditions():
 # --- Login/Auth Routes ---
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    # Generic login is now just a redirect to the student page for ease of access from a link.
+    # Generic login redirects to student login
     return redirect(url_for('student_login'))
 
 # Student-specific login 
@@ -192,7 +199,7 @@ def student_login():
             session["logged_in"] = True
             session["username"] = username
             session["role"] = "Admin"
-            return redirect(url_for("teacher_dashboard")) # Admin uses teacher dashboard for simplicity
+            return redirect(url_for("teacher_dashboard"))
 
         # Regular Student Login
         if username in USERS and check_password_hash(USERS[username], password) and "student" in username:

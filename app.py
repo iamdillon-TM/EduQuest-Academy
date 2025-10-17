@@ -47,11 +47,17 @@ SMTP_PORT = 587
 # ---------------------------
 # DUMMY DATABASE/DATA STRUCTURE 
 # ---------------------------
+# IMPORTANT: Passwords here are HASHED for security even in dummy data.
+# teststudent: password123
+# testteacher: teacher456
+# Dillon (Admin): supersecretadminpassword
 USERS = {
     # Dummy user for testing login
     "teststudent": generate_password_hash("password123"),
     # Dummy teacher
     "testteacher": generate_password_hash("teacher456"),
+    # Admin User for Bypass
+    "Dillon": generate_password_hash("supersecretadminpassword"),
 }
 
 INVOICES = {
@@ -86,9 +92,17 @@ STUDENT_DATA = {
 
 TEACHER_DATA = {
     "username": "testteacher",
-    "full_name": "Ms. Evelyn Reed",
-    "class_count": 5,
-    "upcoming_class": "Intermediate Phase, 19:00 Friday",
+    "name": "Ms. Evelyn Reed",
+    "status": "Online",
+    "email": "evelyn.r@eduquest.academy",
+    "assigned_students": [
+        {"name": "Nguyen Van A", "course": "Foundation 2", "progress": "50%", "next_class": "Thu 17:00"},
+        {"name": "Tran Thi B", "course": "Intermediate 1", "progress": "75%", "next_class": "Fri 19:00"},
+    ],
+    "upcoming_schedule": [
+        {"date": "Oct 17 (Thu)", "time": "17:00", "topic": "Simple Past Tense Review", "student": "Nguyen Van A"},
+        {"date": "Oct 18 (Fri)", "time": "19:00", "topic": "Debate Skills: Environment", "student": "Tran Thi B"},
+    ]
 }
 
 # ---------------------------
@@ -166,35 +180,59 @@ def terms_and_conditions():
 # --- Login/Auth Routes ---
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    # Renders: login.html
+    # Generic login is now just a redirect to the student page for ease of access from a link.
+    return redirect(url_for('student_login'))
+
+# Student-specific login 
+@app.route("/student-login", methods=["GET", "POST"])
+def student_login():
+    # Renders: student_login.html
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        
+        # Admin Bypass (Dillon)
+        if username == "Dillon" and check_password_hash(USERS.get(username, ""), password):
+            session["logged_in"] = True
+            session["username"] = username
+            session["role"] = "Admin"
+            return redirect(url_for("teacher_dashboard")) # Admin uses teacher dashboard for simplicity
+
+        # Regular Student Login
+        if username in USERS and check_password_hash(USERS[username], password) and "student" in username:
+            session["logged_in"] = True
+            session["username"] = username
+            session["role"] = "Student"
+            return redirect(url_for("student_dashboard"))
+        else:
+            return render_template("student_login.html", error="Invalid Student ID or Password.")
+    
+    return render_template("student_login.html")
+
+# Teacher-specific login 
+@app.route("/teacher-login", methods=["GET", "POST"])
+def teacher_login():
+    # Renders: teacher_login.html
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
 
-        if username in USERS and check_password_hash(USERS[username], password):
+        # Admin Bypass (Dillon)
+        if username == "Dillon" and check_password_hash(USERS.get(username, ""), password):
             session["logged_in"] = True
             session["username"] = username
-            
-            if "student" in username:
-                return redirect(url_for("student_dashboard"))
-            elif "teacher" in username:
-                return redirect(url_for("teacher_dashboard"))
-            else:
-                # Default to student dashboard for unknown role
-                return redirect(url_for("student_dashboard")) 
+            session["role"] = "Admin"
+            return redirect(url_for("teacher_dashboard"))
+
+        # Regular Teacher Login
+        if username in USERS and check_password_hash(USERS[username], password) and "teacher" in username:
+            session["logged_in"] = True
+            session["username"] = username
+            session["role"] = "Teacher"
+            return redirect(url_for("teacher_dashboard"))
         else:
-            return render_template("login.html", error="Invalid username or password.")
+            return render_template("teacher_login.html", error="Invalid Teacher Username or Password.")
     
-    return render_template("login.html")
-
-# Student-specific login for convenience (uses the same template)
-@app.route("/student-login")
-def student_login():
-    return render_template("student_login.html")
-
-# Teacher-specific login for convenience (uses the same template)
-@app.route("/teacher-login")
-def teacher_login():
     return render_template("teacher_login.html")
 
 
@@ -242,11 +280,12 @@ def student_dashboard():
     username = session.get('username')
     student = get_user_data(username)
     
-    if not student or "student" not in username:
+    # Check if user is a student or the admin
+    if not student or ("student" not in username and session.get('role') != 'Admin'):
         session.clear()
         return redirect(url_for('login'))
 
-    return render_template("student_dashboard.html", user=student)
+    return render_template("student_dashboard.html", student=student)
 
 # Student Profile
 @app.route("/student-profile")
@@ -258,11 +297,11 @@ def student_profile():
     username = session.get('username')
     student = get_user_data(username)
     
-    if not student or "student" not in username:
+    if not student or ("student" not in username and session.get('role') != 'Admin'):
         session.clear()
         return redirect(url_for('login'))
 
-    return render_template("student_profile.html", user=student)
+    return render_template("student_profile.html", student=student)
 
 
 # Teacher Dashboard
@@ -275,11 +314,21 @@ def teacher_dashboard():
     username = session.get('username')
     teacher = get_user_data(username)
 
-    if not teacher or "teacher" not in username:
+    # Check if user is a teacher or the admin (Dillon)
+    if not teacher and session.get('role') != 'Admin':
         session.clear()
         return redirect(url_for('login'))
+        
+    # If the user is the admin, customize the teacher data for display purposes
+    if session.get('role') == 'Admin':
+        # Create a mutable copy of TEACHER_DATA to modify for the admin view
+        admin_view_data = TEACHER_DATA.copy() 
+        admin_view_data['name'] = "Admin Dillon"
+        admin_view_data['status'] = "Superuser"
+        admin_view_data['email'] = "dillon@eduquest.academy"
+        teacher = admin_view_data
 
-    return render_template("teacher_dashboard.html", user=teacher)
+    return render_template("teacher_dashboard.html", teacher=teacher)
 
 
 @app.route("/my-course")
@@ -291,7 +340,7 @@ def my_course():
     username = session.get('username')
     student = get_user_data(username)
     
-    if not student or "student" not in username:
+    if not student or ("student" not in username and session.get('role') != 'Admin'):
         session.clear()
         return redirect(url_for('login'))
 
@@ -311,7 +360,7 @@ def invoices():
     username = session.get('username')
     student = get_user_data(username)
     
-    if not student or "student" not in username:
+    if not student or ("student" not in username and session.get('role') != 'Admin'):
         session.clear()
         return redirect(url_for('login'))
 
@@ -332,6 +381,9 @@ def payment_options(invoice_id):
 @app.route("/international/<int:invoice_id>")
 def international_details(invoice_id):
     # Renders: international_details.html
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+        
     username = session.get('username')
     student = get_user_data(username)
     
@@ -352,7 +404,9 @@ def international_details(invoice_id):
 @app.route("/vietqr/<int:invoice_id>")
 def vietqr_details(invoice_id):
     # Renders: vietqr_details.html
-    # Dummy logic to check for login/invoice, similar to international_details
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+        
     username = session.get('username')
     student = get_user_data(username)
     
@@ -412,4 +466,6 @@ def chatbot_api():
 # Run (only for local development)
 # ---------------------------
 if __name__ == "__main__":
+    # Ensure you have the templates and static folders ready
+    # For local testing, use: http://127.0.0.1:5000/
     app.run(debug=True)

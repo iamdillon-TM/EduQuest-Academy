@@ -148,7 +148,7 @@ def home():
     # Renders: home.html
     return render_template("home.html")
 
-# FIXED: Added the missing /contact route
+# FIX 1: Added the missing /contact route
 @app.route("/contact")
 def contact():
     # Renders: contact.html
@@ -368,11 +368,11 @@ def invoices():
 
     return render_template("invoices.html", student=student)
 
-# FIXED: Added a simple redirect to support templates linking to 'payments' 
-# which should really point to 'invoices'. This solves the BuildError.
+# FIX 2: Added a simple redirect to support templates linking to 'payments' 
+# which should really point to 'invoices'. This solves the BuildError in the logs.
 @app.route("/payments")
 def payments():
-    """Redirects the legacy 'payments' endpoint to the working 'invoices' endpoint."""
+    """Redirects the endpoint used by home.html to the working invoices page."""
     return redirect(url_for('invoices'))
 
 # --- Payment Routes ---

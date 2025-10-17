@@ -47,10 +47,6 @@ SMTP_PORT = 587
 # ---------------------------
 # DUMMY DATABASE/DATA STRUCTURE 
 # ---------------------------
-# IMPORTANT: Passwords here are HASHED for security even in dummy data.
-# teststudent: password123
-# testteacher: teacher456
-# Dillon (Admin): supersecretadminpassword
 USERS = {
     # Dummy user for testing login
     "teststudent": generate_password_hash("password123"),
@@ -466,6 +462,4 @@ def chatbot_api():
 # Run (only for local development)
 # ---------------------------
 if __name__ == "__main__":
-    # Ensure you have the templates and static folders ready
-    # For local testing, use: http://127.0.0.1:5000/
     app.run(debug=True)

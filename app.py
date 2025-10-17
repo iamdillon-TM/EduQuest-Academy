@@ -148,12 +148,11 @@ def home():
     # Renders: home.html
     return render_template("home.html")
 
-# NEW ROUTE ADDED TO FIX BUILDERROR
+# FIXED: Added the missing /contact route
 @app.route("/contact")
 def contact():
-    # Renders: contact.html (The template with the mailto link)
+    # Renders: contact.html
     return render_template("contact.html")
-# END NEW ROUTE
 
 @app.route("/courses")
 def courses():
@@ -369,6 +368,12 @@ def invoices():
 
     return render_template("invoices.html", student=student)
 
+# FIXED: Added a simple redirect to support templates linking to 'payments' 
+# which should really point to 'invoices'. This solves the BuildError.
+@app.route("/payments")
+def payments():
+    """Redirects the legacy 'payments' endpoint to the working 'invoices' endpoint."""
+    return redirect(url_for('invoices'))
 
 # --- Payment Routes ---
 @app.route("/payments/<int:invoice_id>")

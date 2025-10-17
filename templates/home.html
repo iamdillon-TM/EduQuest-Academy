@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EduQuest Academy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* --- HARMONIZED COLOR PALETTE --- */
@@ -19,22 +20,40 @@
         body {
             margin: 0;
             font-family: "Poppins", sans-serif;
-            /* FIX APPLIED HERE */
-            background: url('homepage.png') no-repeat center center fixed;
-            background-size: cover;
+            /* REMOVED background: url('homepage.png') FROM HERE */
             color: white;
             text-align: center;
             overflow-x: hidden;
+            /* Set position to relative so z-index works on children */
+            position: relative; 
+            min-height: 100vh;
+        }
+        
+        /* === BACKGROUND IMAGE CONTAINER (NEW FIX) === */
+        #bg-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -2; /* Below the overlay */
+        }
+        #bg-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensures image covers the whole area */
+            filter: brightness(0.65); /* Keeps the image dark for better text contrast */
         }
 
-        /* === OVERLAY FOR READABILITY === */
+        /* === OVERLAY FOR READABILITY (Slightly adjusted z-index) === */
         body::before {
             content: "";
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             /* Softened overlay color to keep the image warmth */
-            background: rgba(0, 0, 0, 0.55);
+            background: rgba(0, 0, 0, 0.4); /* Less dark, relies on image filter now */
             z-index: -1;
         }
 
@@ -42,9 +61,10 @@
         .top-left-buttons {
             position: absolute;
             top: 20px;
-            left: 30px; /* MOVED TO LEFT */
+            left: 30px; 
             display: flex;
             gap: 15px;
+            z-index: 10;
         }
         
         .top-right-buttons {
@@ -53,11 +73,12 @@
             right: 30px;
             display: flex;
             gap: 15px;
+            z-index: 10;
         }
 
 
         .login-btn {
-            background-color: var(--color-accent); /* Clear Blue */
+            background-color: var(--color-accent); 
             color: white;
             border: none;
             padding: 10px 18px;
@@ -74,7 +95,7 @@
         }
 
         .login-btn.contact-btn {
-            background-color: transparent; /* Transparent for less distraction */
+            background-color: transparent; 
             border: 1px solid var(--color-accent);
             box-shadow: none;
         }
@@ -108,6 +129,9 @@
         /* === HERO SECTION === */
         .hero {
             margin-top: 120px;
+            padding: 0 20px; /* Add padding for mobile */
+            z-index: 1; /* Bring content above overlay */
+            position: relative;
         }
 
         h1 {
@@ -126,6 +150,7 @@
             white-space: nowrap;
             overflow: hidden;
             border-right: 3px solid var(--color-light);
+            display: inline-block; /* Essential for text-align center */
         }
 
         /* === NAVIGATION BUTTONS (BIG BLUE) === */
@@ -138,20 +163,16 @@
         }
 
         .nav-btn {
-            /* CHANGED TO BLUE */
             background-color: var(--color-accent); 
             color: white;
             border: none;
-            /* MADE MUCH BIGGER */
             padding: 25px 60px;
             border-radius: 50px;
-            /* INCREASED FONT SIZE */
             font-size: 24px; 
             cursor: pointer;
             position: relative;
             overflow: hidden;
             transition: all 0.3s ease-in-out;
-            /* CHANGED SHADOW TO BLUE */
             box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
             text-decoration: none;
             display: inline-block;
@@ -175,17 +196,27 @@
 
         .nav-btn:hover {
             transform: translateY(-4px);
-            /* CHANGED SHADOW TO STRONGER BLUE */
             box-shadow: 0 0 25px rgba(52, 152, 219, 0.9);
-            background-color: #2980b9; /* Slightly darker blue on hover */
+            background-color: #2980b9; 
+        }
+        
+        /* === MEDIA QUERIES === */
+        @media (max-width: 768px) {
+            h1 { font-size: 40px; }
+            #quote { font-size: 18px; height: 40px; }
+            .nav-btn { padding: 15px 30px; font-size: 18px; }
+            .nav-buttons { gap: 15px; }
+            .top-left-buttons, .top-right-buttons { top: 10px; right: 10px; left: 10px; }
+            .top-left-buttons { justify-content: flex-start; }
+            .top-right-buttons { justify-content: flex-end; }
         }
 
-        /* === CHATBOT === */
+        /* === CHATBOT STYLES (Kept your original styles) === */
         .chatbot {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: var(--color-accent); /* Clear Blue */
+            background: var(--color-accent);
             border-radius: 50%;
             width: 65px;
             height: 65px;
@@ -195,7 +226,7 @@
             cursor: pointer;
             box-shadow: 0 0 15px rgba(52, 152, 219, 0.6);
             transition: all 0.3s ease;
-            z-index: 1001; /* Ensure it's above everything */
+            z-index: 1001; 
         }
         .chatbot:hover {
             transform: scale(1.1);
@@ -233,7 +264,7 @@
             flex-grow: 1;
             padding: 15px;
             overflow-y: auto;
-            background: var(--color-light); /* Light background for chat messages */
+            background: var(--color-light); 
             font-size: 14px;
             text-align: left;
             color: #333;
@@ -244,12 +275,12 @@
             border-radius: 12px;
             max-width: 80%;
         }
-        .chat-body p:nth-child(even) { /* Bot messages */
+        .chat-body p:nth-child(even) { 
             background: #fff;
             margin-right: auto;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        .chat-body p:nth-child(odd) { /* User messages */
+        .chat-body p:nth-child(odd) { 
             background: #d9e9ff;
             margin-left: auto;
             text-align: right;
@@ -269,7 +300,7 @@
             font-size: 14px;
         }
         .chat-input button {
-            background: var(--color-secondary); /* Fresh Green */
+            background: var(--color-secondary); 
             color: white;
             border: none;
             border-radius: 50%;
@@ -297,10 +328,14 @@
             50% { opacity: 1; }
             100% { opacity: 0.5; }
         }
-        /* END CHATBOT STYLES */
     </style>
 </head>
 <body>
+    
+    <div id="bg-image">
+        <img src="{{ url_for('static', filename='homepage.png') }}" alt="Background image of students learning">
+    </div>
+
     <div class="top-left-buttons">
         <a href="{{ url_for('home') }}" class="login-btn">Home</a>
     </div>

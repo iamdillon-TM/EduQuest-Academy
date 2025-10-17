@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EduQuest Academy</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> 
     <style>
         /* --- HARMONIZED COLOR PALETTE --- */
         :root {
-            --color-primary: #34495e; /* Darker Blue-Gray */
-            --color-secondary: #2ecc71; /* Fresh Green (Kept for send button) */
-            --color-accent: #3498db; /* Clear Blue (Modern, engaging) */
+            --color-primary: #34495e; 
+            --color-secondary: #2ecc71; 
+            --color-accent: #3498db; 
             --color-dark: #2c3e50;
             --color-light: #ecf0f1;
         }
@@ -28,7 +28,6 @@
         }
         
         /* === BACKGROUND IMAGE CONTAINER (FIXED) === */
-        /* If the image still doesn't show, the issue is usually in this block or the file location/name. */
         #bg-image {
             position: fixed;
             top: 0;
@@ -453,8 +452,8 @@
             chatBody.scrollTop = chatBody.scrollHeight;
 
             try {
-                // 3. Send to API (This assumes you have a working '/api/chat' endpoint in app.py)
-                const response = await fetch('/api/chat', {
+                // Assuming you have a working '/api/chat' endpoint in app.py
+                const response = await fetch('/api/chat', { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: message })

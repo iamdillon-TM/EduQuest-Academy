@@ -3,103 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VietQR Payment Details</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <title>VN Pay Details - EduQuest Academy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Your existing CSS styles go here */
-        body {
-            font-family: 'Poppins', sans-serif;
-            text-align: center;
-            padding: 50px;
-            background-color: #f4f7f6;
-        }
-        .container {
+        /* Basic styling for Payment details page content */
+        body { font-family: 'Poppins', sans-serif; background-color: #f4f7f6; }
+        .payment-container {
             max-width: 600px;
-            margin: 0 auto;
+            margin: 50px auto;
             padding: 30px;
             background: white;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
         }
-        h2 {
-            color: #007A44;
-            margin-bottom: 20px;
-        }
-        .qr-code img {
-            max-width: 80%;
-            height: auto;
-            border: 1px solid #ddd;
+        h2 { color: #007A44; margin-bottom: 25px; }
+        .qr-code-box {
+            border: 2px solid #ddd;
+            padding: 10px;
             border-radius: 10px;
+            display: inline-block;
             margin-bottom: 20px;
         }
-        .details p {
-            font-size: 18px;
-            line-height: 1.6;
-            color: #333;
+        /* Style for the QR code image */
+        .qr-code-box img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            display: block;
         }
-        .details strong {
-            display: inline-block; 
-            min-width: 120px;
-            text-align: left; 
-        }
-        .warning {
-            color: #ff4b5c;
-            font-weight: 600;
+        .account-info {
+            text-align: left;
             margin-top: 20px;
-        }
-        a.back-link {
-            display: inline-block;
-            margin-top: 30px;
-            color: #2575fc;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        /* New style for amount display */
-        .amount-due {
-            font-size: 24px;
-            font-weight: 700;
-            color: #007A44;
-            margin: 10px 0;
-            padding: 5px 10px;
-            border: 2px solid #007A44;
-            display: inline-block;
+            padding: 15px;
+            border: 1px solid #eee;
             border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .account-info p {
+            margin: 8px 0;
+            font-size: 1.1em;
+        }
+        .account-info strong {
+            color: #333;
+            display: inline-block;
+            min-width: 150px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Complete Your Payment via VietQR</h2>
-        
-        <p>Your payment due for Invoice {{ invoice.id }}:</p>
-        <div class="amount-due">{{ "{:,.0f} VND".format(invoice.amount) }}</div>
-        
-        <p>Scan the code below with any Vietnamese Mobile Banking App (VietQR):</p>
-        
-        <div class="qr-code">
-            <img src="{{ url_for('static', filename='payment_vn.jpg') }}" alt="VietQR Payment Code">
+    
+    {% include 'header.html' %} 
+
+    <div class="payment-container">
+        <h2>VN Bank Transfer Details (VietQR)</h2>
+        <p>Please use one of the methods below to complete your payment.</p>
+
+        <div class="qr-code-box">
+            <p style="font-size: 1.2em; font-weight: 600; color: #333; margin-top: 5px;">Scan to Pay (Recommended)</p>
+            <img src="{{ url_for('static', filename='payment_vn.jpg') }}" alt="VietQR code for bank transfer">
         </div>
-        
-        <div class="details">
-            <p><strong>Account Name:</strong> DILLON SWANEPOEL</p>
-            <p><strong>Account Number:</strong> 8890894206</p>
-            <p><strong>Bank:</strong> BIDV - CN DONG DO PGD BAC THANH CONG</p>
-            
-            <p class="warning">
-                <strong>Reference Note (REQUIRED):</strong> {{ invoice.id }}_{{ student.username }}
-            </p>
-            <p style="font-size: 14px; margin-top: 5px;">
-                *Please use this exact reference so we can quickly verify your payment.
-            </p>
-        </div>
-        
-        <p class="warning">
-            ⚠️ **NOTE:** After successful transfer, please email us your transaction receipt for quick verification.
+
+        <p style="font-style: italic; color: #555;">
+            Note: Please ensure the payment note includes **[Student Name] - [Course Code]** to ensure your enrollment is processed quickly.
         </p>
+
+        <div class="account-info">
+            <h3>Manual Transfer Details</h3>
+            <p><strong>Bank:</strong> Vietcombank (VCB)</p>
+            <p><strong>Account Name:</strong> NGUYEN VAN A</p>
+            <p><strong>Account Number:</strong> 00000000000000</p>
+            <p><strong>Branch:</strong> Ho Chi Minh City</p>
+        </div>
         
-        <a href="{{ url_for('payment_options', invoice_id=invoice.id) }}" class="back-link">
-            ← Back to Payment Options
-        </a>
+        <p style="margin-top: 30px;">
+            <a href="{{ url_for('payments') }}" style="color: #2575fc; text-decoration: none;">&larr; Back to Payment Options</a>
+        </p>
     </div>
+
+    {% include 'footer.html' %} 
+
 </body>
 </html>
